@@ -96,9 +96,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           dependencies: ${{ matrix.dependencies }}
-      # The oldest supported dependencies predate PHP 8.4 (implicit nullable parameters): their own deprecations cannot
-      # be fixed here, so they do not fail the lowest runs on PHP >= 8.4 (highest and locked runs still do).
-      - run: vendor/bin/phpunit --testsuite=unit,functional ${{ matrix.dependencies == 'lowest' && contains(fromJSON('["8.4","8.5"]'), matrix.php) && '--do-not-fail-on-deprecation' || '' }}
+      - run: vendor/bin/phpunit --testsuite=unit,functional
 
   # 100 % lines / methods / classes over the whole of src (unit + functional suites).
   coverage:

@@ -9,8 +9,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
-- CI moved from GitLab CI to GitHub Actions (`.github/workflows/ci.yml`), same gates and PHP matrix. The lowest-dependencies runs on PHP >= 8.4 do not fail on deprecations raised by the oldest
-  Symfony/PSR packages (they predate PHP 8.4); `symfony/polyfill-php83` ^1.31 is required in `require-dev` for the same reason.
+- CI moved from GitLab CI to GitHub Actions (`.github/workflows/ci.yml`), same gates and PHP matrix. Deprecations are
+  blocking in the whole matrix, including the lowest-dependencies runs on PHP 8.4 and 8.5.
+- Minimum dependency versions raised to the first releases that are clean on PHP 8.4 and 8.5 (patch levels only, the
+  Symfony 6.4 LTS and PHP 8.2 support is kept): `psr/http-factory` ^1.1; `symfony/{clock,framework-bundle,lock,messenger}`
+  `<6.4.3`, `symfony/dependency-injection` `<6.4.26`, `nyholm/psr7` `<1.8.2` and `doctrine/orm` `<3.5.3` are now declared
+  as `conflict`. Development-only floors (Symfony `^6.4.3 || ^7.4` components and contracts, `doctrine/persistence`,
+  `php-http/*`, `symfony/polyfill-php83`) are set in `require-dev` so that `composer update --prefer-lowest` stays
+  deprecation-free.
 
 ### Fixed
 

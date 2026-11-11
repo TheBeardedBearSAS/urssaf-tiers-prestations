@@ -8,6 +8,8 @@
          failOnRisky="true"
          failOnWarning="true"
          failOnDeprecation="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
+         displayDetailsOnPhpunitDeprecations="true"
          failOnNotice="true"
          failOnEmptyTestSuite="false"
          beStrictAboutOutputDuringTests="true"
