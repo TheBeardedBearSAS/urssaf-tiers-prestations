@@ -1,0 +1,48 @@
+name: Setup PHP and dependencies
+description: Installs PHP with the extensions of docker/php/Dockerfile and the Composer dependencies.
+
+inputs:
+  php-version:
+    description: PHP version
+    required: true
+  dependencies:
+    description: locked (composer install), lowest or highest (composer update)
+    required: false
+    default: locked
+  coverage:
+    description: Coverage driver (none, pcov, xdebug)
+    required: false
+    default: none
+
+runs:
+  using: composite
+  steps:
+    - uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ inputs.php-version }}
+        extensions: intl, mbstring, pdo_sqlite, zip, ctype, filter
+        ini-values: memory_limit=-1, date.timezone=UTC
+        coverage: ${{ inputs.coverage }}
+        tools: composer:v2
+
+    - name: Composer cache directory
+      id: composer-cache
+      shell: bash
+      run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+    - uses: actions/cache@v4
+      with:
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: composer-${{ runner.os }}-php${{ inputs.php-version }}-${{ inputs.dependencies }}-${{ hashFiles('composer.json', 'composer.lock') }}
+        restore-keys: composer-${{ runner.os }}-php${{ inputs.php-version }}-${{ inputs.dependencies }}-
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        mkdir -p var
+        case "${{ inputs.dependencies }}" in
+          locked)  composer install --no-progress ;;
+          lowest)  composer update --prefer-lowest --prefer-stable --no-progress ;;
+          highest) composer update --no-progress ;;
+          *) echo "Unknown dependencies mode: ${{ inputs.dependencies }}"; exit 1 ;;
+        esac

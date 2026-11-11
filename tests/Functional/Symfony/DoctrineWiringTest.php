@@ -44,8 +44,15 @@ final class DoctrineWiringTest extends TestCase
 
         static::assertFalse($entityManager->getMetadataFactory()->isTransient(CustomerRegistration::class));
         static::assertFalse($entityManager->getMetadataFactory()->isTransient(PaymentRequest::class));
-        // The bundle leaves the proxy generation mode to the host (doctrine-bundle default outside debug: never).
-        static::assertSame(ProxyFactory::AUTOGENERATE_NEVER, $entityManager->getConfiguration()->getAutoGenerateProxyClasses());
+        // The bundle leaves the proxy generation mode to the host (doctrine-bundle default outside debug: never); with
+        // native lazy objects, no proxy is generated at all and the mode is not configured.
+        static::assertSame(
+            DoctrineIntegration::nativeLazyObjectsAvailable() ? ProxyFactory::AUTOGENERATE_ALWAYS : ProxyFactory::AUTOGENERATE_NEVER,
+            $entityManager->getConfiguration()->getAutoGenerateProxyClasses(),
+        );
+        if (DoctrineIntegration::nativeLazyObjectsAvailable()) {
+            static::assertTrue($entityManager->getConfiguration()->isNativeLazyObjectsEnabled());
+        }
         foreach (array_keys(DoctrineIntegration::types()) as $type) {
             static::assertTrue(Type::hasType($type), $type);
         }
@@ -83,11 +90,30 @@ final class DoctrineWiringTest extends TestCase
 
     public function testTheProxyCacheWarmerGeneratesTheProxiesOfTheMappedEntitiesWhichThenLoadLazily(): void
     {
+        $native = DoctrineIntegration::nativeLazyObjectsAvailable();
         $harness = Harness::boot(
             ['persistence' => ['driver' => 'doctrine']],
             ['dbal' => ['driver' => 'pdo_sqlite', 'memory' => true], 'orm' => ['enable_lazy_ghost_objects' => true, 'auto_generate_proxy_classes' => false]],
         );
         $entityManager = $harness->privateService('doctrine.orm.default_entity_manager', EntityManagerInterface::class);
+        if (!$native) {
+            $this->assertProxiesAreWarmedUp($harness, $entityManager);
+        }
+        $harness->createDatabaseSchema();
+        $harness->privateService(CustomerRegistrationRepository::class, CustomerRegistrationRepository::class)
+            ->save(RegistrationBuilder::pending('reg-1', 'tenant-1', 'ref-1', '2026-11-10T09:00:00Z'));
+        $entityManager->clear();
+
+        $reference = $entityManager->getReference(CustomerRegistration::class, RegistrationId::fromString('reg-1'));
+
+        static::assertInstanceOf(CustomerRegistration::class, $reference);
+        static::assertTrue($entityManager->getUnitOfWork()->isUninitializedObject($reference));
+        static::assertSame('ref-1', $reference->externalReference()->value());
+        static::assertFalse($entityManager->getUnitOfWork()->isUninitializedObject($reference));
+    }
+
+    private function assertProxiesAreWarmedUp(Harness $harness, EntityManagerInterface $entityManager): void
+    {
         $proxyDirectory = $entityManager->getConfiguration()->getProxyDir();
         static::assertIsString($proxyDirectory);
         (new Filesystem())->remove($proxyDirectory);
@@ -106,17 +132,6 @@ final class DoctrineWiringTest extends TestCase
             ],
             $proxies,
         );
-        $harness->createDatabaseSchema();
-        $harness->privateService(CustomerRegistrationRepository::class, CustomerRegistrationRepository::class)
-            ->save(RegistrationBuilder::pending('reg-1', 'tenant-1', 'ref-1', '2026-11-10T09:00:00Z'));
-        $entityManager->clear();
-
-        $reference = $entityManager->getReference(CustomerRegistration::class, RegistrationId::fromString('reg-1'));
-
-        static::assertInstanceOf(CustomerRegistration::class, $reference);
-        static::assertTrue($entityManager->getUnitOfWork()->isUninitializedObject($reference));
-        static::assertSame('ref-1', $reference->externalReference()->value());
-        static::assertFalse($entityManager->getUnitOfWork()->isUninitializedObject($reference));
     }
 
     private static function doctrine(string $entityManager): Harness

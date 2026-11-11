@@ -95,6 +95,9 @@ final class TestDatabase
         $configuration->setProxyDir(self::directory() . '/proxies');
         $configuration->setProxyNamespace('UrssafTiersPrestationsTestProxies');
         $configuration->setMiddlewares($middlewares);
+        if (DoctrineIntegration::nativeLazyObjectsAvailable()) {
+            $configuration->enableNativeLazyObjects(true);
+        }
 
         return new EntityManager(DriverManager::getConnection(['driver' => 'pdo_sqlite', 'driverOptions' => [PDO::ATTR_TIMEOUT => 1]] + $location, $configuration), $configuration);
     }

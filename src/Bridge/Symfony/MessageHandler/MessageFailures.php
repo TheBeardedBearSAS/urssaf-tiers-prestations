@@ -41,7 +41,7 @@ final class MessageFailures
         try {
             return $operation();
         } catch (RetryableException $failure) {
-            throw new RecoverableMessageHandlingException($failure->getMessage(), 0, $failure, self::retryDelayMilliseconds($failure));
+            throw RecoverableFailures::detect()->create($failure->getMessage(), $failure, self::retryDelayMilliseconds($failure));
         } catch (UrssafException $failure) {
             throw new UnrecoverableMessageHandlingException($failure->getMessage(), 0, $failure);
         }
@@ -52,7 +52,7 @@ final class MessageFailures
      */
     public static function busy(string $resource): RecoverableMessageHandlingException
     {
-        return new RecoverableMessageHandlingException(\sprintf('Operation already running (lock "%s" is held).', $resource), 0, null, self::BUSY_RETRY_DELAY_MILLISECONDS);
+        return RecoverableFailures::detect()->create(\sprintf('Operation already running (lock "%s" is held).', $resource), null, self::BUSY_RETRY_DELAY_MILLISECONDS);
     }
 
     private static function retryDelayMilliseconds(Throwable $failure): ?int

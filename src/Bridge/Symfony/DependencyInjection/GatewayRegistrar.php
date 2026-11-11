@@ -47,7 +47,7 @@ final readonly class GatewayRegistrar
     public function register(array $config): void
     {
         $this->services->set(ServiceIds::SYMFONY_HTTP_CLIENT, HttpClientInterface::class)
-            ->factory(HttpClient::create(...))
+            ->factory(HttpClient::class . '::create')
             ->args([['timeout' => $config['http_timeout']]]);
         // Also provides the PSR-17 request and stream factories, whatever the PSR-18 client in use.
         $this->services->set(ServiceIds::PSR18_CLIENT, Psr18Client::class)->args([new Reference(ServiceIds::SYMFONY_HTTP_CLIENT)]);

@@ -7,6 +7,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-11
+
+### Changed
+
+- CI moved from GitLab CI to GitHub Actions (`.github/workflows/ci.yml`), same gates and PHP matrix. Deprecations are
+  blocking in the whole matrix, including the lowest-dependencies runs on PHP 8.4 and 8.5.
+- Minimum dependency versions raised to the first releases that are clean on PHP 8.4 and 8.5 (patch levels only, the
+  Symfony 6.4 LTS and PHP 8.2 support is kept): `psr/http-factory` ^1.1; `symfony/{clock,framework-bundle,lock,messenger}`
+  `<6.4.3`, `symfony/dependency-injection` `<6.4.26`, `nyholm/psr7` `<1.8.2` and `doctrine/orm` `<3.5.3` are now declared
+  as `conflict`. Development-only floors (Symfony `^6.4.3 || ^7.4` components and contracts, `doctrine/persistence`,
+  `php-http/*`, `symfony/polyfill-php83`) are set in `require-dev` so that `composer update --prefer-lowest` stays
+  deprecation-free.
+
+### Fixed
+
+- Symfony 6.4: the bundle no longer passes closures to the service configurator (`factory()` only accepts strings and
+  arrays there), so it compiles with every supported Symfony version.
+- Symfony Messenger 6.4: `RecoverableMessageHandlingException` has no retry delay argument there; the delay is now
+  passed only when the installed version supports it (`MessageFailures` degrades to the transport retry strategy).
+- PHP 8.4 with `symfony/var-exporter` 8: the Symfony bundle prepends `doctrine.orm.enable_native_lazy_objects: true`
+  when PHP >= 8.4 and the ORM supports native lazy objects (`DoctrineIntegration::nativeLazyObjectsAvailable()`);
+  see `docs/doctrine.md` and `docs/symfony.md`.
+
 ## [0.1.0] - 2026-11-11
 
 ### Added
