@@ -1,0 +1,45 @@
+<?php
+
+declare(strict_types=1);
+
+namespace TheBeardedBear\UrssafTiersPrestations\Domain\Customer\Event;
+
+use DateTimeImmutable;
+use TheBeardedBear\UrssafTiersPrestations\Domain\Customer\RegistrationId;
+use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\DomainEvent;
+use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\ExternalReference;
+use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\Instant;
+use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\TenantId;
+
+/**
+ * A registration was requested for a customer (state pending).
+ */
+final readonly class CustomerRegistrationRequested implements DomainEvent
+{
+    public function __construct(
+        private RegistrationId $registrationId,
+        private TenantId $tenantId,
+        private ExternalReference $externalReference,
+        private Instant $occurredAt,
+    ) {}
+
+    public function registrationId(): RegistrationId
+    {
+        return $this->registrationId;
+    }
+
+    public function tenantId(): TenantId
+    {
+        return $this->tenantId;
+    }
+
+    public function externalReference(): ExternalReference
+    {
+        return $this->externalReference;
+    }
+
+    public function occurredAt(): DateTimeImmutable
+    {
+        return $this->occurredAt->toDateTimeImmutable();
+    }
+}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <embeddable name="TheBeardedBear\UrssafTiersPrestations\Domain\Shared\EmploymentPeriod">
+        <field name="start" type="urssaf_tps_instant" column="employment_start"/>
+        <field name="end" type="urssaf_tps_instant" column="employment_end"/>
+        <field name="businessTimeZone" type="urssaf_tps_time_zone" column="employment_time_zone" length="64"/>
+    </embeddable>
+</doctrine-mapping>

@@ -1,0 +1,10 @@
+[
+  {
+    "idClient": "6a56a628-b09e-8707-787e-10f218a2d550",
+    "numFactureTiers": "TEST-2023-09-25 03:01:59",
+    "statut": "ERR_CMPT_BLOQUE",
+    "errors": [
+      { "code": "ERR_CMPT_BLOQUE", "message": "Compte bloque.", "description": "Le compte du particulier est bloque." }
+    ]
+  }
+]

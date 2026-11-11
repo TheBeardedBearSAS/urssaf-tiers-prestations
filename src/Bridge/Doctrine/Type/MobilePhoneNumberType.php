@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+namespace TheBeardedBear\UrssafTiersPrestations\Bridge\Doctrine\Type;
+
+use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Doctrine\DBAL\Types\Type;
+use TheBeardedBear\UrssafTiersPrestations\Bridge\Doctrine\Type\Conversion\StringValueConversion;
+use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\MobilePhoneNumber;
+
+/**
+ * Column type of {@see MobilePhoneNumber}: a VARCHAR holding its value.
+ */
+final class MobilePhoneNumberType extends Type
+{
+    public const NAME = 'urssaf_tps_mobile_phone_number';
+
+    public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
+    {
+        return $platform->getStringTypeDeclarationSQL($column);
+    }
+
+    public function convertToDatabaseValue(mixed $value, AbstractPlatform $platform): ?string
+    {
+        return StringValueConversion::toDatabase($value, MobilePhoneNumber::class, self::class, static fn(MobilePhoneNumber $value): string => $value->value());
+    }
+
+    public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?MobilePhoneNumber
+    {
+        return StringValueConversion::toPhp($value, self::class, MobilePhoneNumber::fromString(...));
+    }
+}

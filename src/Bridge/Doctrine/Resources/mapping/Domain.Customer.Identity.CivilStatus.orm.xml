@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <embeddable name="TheBeardedBear\UrssafTiersPrestations\Domain\Customer\Identity\CivilStatus">
+        <field name="civility" type="string" column="civility" length="1" enum-type="TheBeardedBear\UrssafTiersPrestations\Domain\Customer\Identity\Civility"/>
+        <field name="birthName" type="urssaf_tps_person_name" column="birth_name" length="80"/>
+        <field name="usageName" type="urssaf_tps_person_name" column="usage_name" length="80" nullable="true"/>
+        <field name="firstNames" type="urssaf_tps_person_name" column="first_names" length="80"/>
+        <field name="birthDate" type="urssaf_tps_calendar_date" column="birth_date"/>
+        <embedded name="birthPlace" class="TheBeardedBear\UrssafTiersPrestations\Domain\Customer\Identity\BirthPlace" use-column-prefix="false"/>
+    </embeddable>
+</doctrine-mapping>

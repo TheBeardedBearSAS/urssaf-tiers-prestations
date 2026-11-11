@@ -1,0 +1,6 @@
+{
+  "errors": [
+    { "code": "ERR_RECHERCHE_VIDE", "message": "Aucun resultat", "description": "Aucune demande de paiement ne correspond a la recherche" }
+  ],
+  "infoDemandePaiements": []
+}

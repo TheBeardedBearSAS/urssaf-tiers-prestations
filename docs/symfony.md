@@ -1,0 +1,210 @@
+# Symfony bundle
+
+Bundle class: `TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\UrssafTiersPrestationsBundle` (alias
+`urssaf_tiers_prestations`), for Symfony 6.4 and 7.x. Register it in `config/bundles.php`.
+
+## Configuration reference
+
+The configuration tree is defined in `Bridge\Symfony\DependencyInjection\BundleConfiguration`.
+
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `environment` | enum `sandbox` \| `production` | required | Target platform (`https://api-edi.urssaf.fr` / `https://api.urssaf.fr`). |
+| `base_uri` | string \| null | `null` | Overrides the base URI of the selected environment (the sandbox host may differ). |
+| `application_id` | string \| null | `null` | Value of the `recouv.application.id` header (omitted when null). |
+| `token_safety_margin` | int >= 0 | `60` | Seconds before expiry from which an access token is renewed. |
+| `pairing_time_zone` | string | `Europe/Paris` | Time zone of the pairing acceptance date that URSSAF writes (French local time) in the method 020 status description; validated against `DateTimeZone::listIdentifiers()`. |
+| `http_client` | string \| null | `null` | Service id of a PSR-18 client. Default: a dedicated Symfony HttpClient wrapped in `Psr18Client`. |
+| `http_timeout` | float >= 0.1 | `15.0` | Timeout in seconds of the default HTTP client. |
+| `credentials_provider` | string \| null | `null` | Service id of a `CredentialsProvider`. Mutually exclusive with `credentials`. |
+| `credentials` | map tenant id => `{client_id, client_secret}` | `[]` | Static credentials by tenant (both keys required, non-empty). Use `%env(...)%` placeholders. |
+| `tenants` | list of string | keys of `credentials` | Tenants processed by the commands that cannot discover them. |
+| `token_store.cache_pool` | string | `cache.app` | Cache pool (PSR-6) that stores the access tokens. Recommended: a **dedicated pool** (see below), so that clearing `cache.app` does not drop the tokens and the tokens never share a pool with unrelated data. |
+| `token_store.service` | string \| null | `null` | Service id of a `TokenStore`; takes precedence over the cache pool. |
+| `rate_limiter.enabled` | bool | `false` | Enforces the URSSAF quotas per tenant, in the current process (`SlidingWindowRateLimiter`). |
+| `workflow.business_timezone` | string | `Europe/Paris` | Time zone used for date-only values (validated against `DateTimeZone::listIdentifiers()`). |
+| `workflow.settled_max_age` | ISO 8601 duration | `P90D` | How long a paid/recovered request is still polled. |
+| `workflow.unknown_status_max_age` | ISO 8601 duration | `P30D` | How long a payment request is still polled after a status code unknown to this package version was observed (it may never change). |
+| `workflow.max_polling_age` | ISO 8601 duration | `P1Y` | How long a payment request is still polled after its submission, whatever its status: a request is never followed forever. |
+| `workflow.stale_submission_after` | ISO 8601 duration | `PT15M` | Age after which a `submitting` request is considered stale. |
+| `workflow.billing_third_party_id` | string | `menage.fr` | Billing third-party id sent with every payment request. |
+| `workflow.batch_size` | int 1..10 | `10` | Payment requests per method 050 call (URSSAF accepts 1 to 10). |
+| `workflow.default_page_size` | int >= 1 | `100` | Records loaded by a batch use case when no limit is given. |
+| `workflow.max_page_size` | int >= 1 | `1000` | Upper bound of the records loaded by a batch use case. |
+| `workflow.max_submission_attempts` | int >= 1 | `5` | Submission attempts after which a technical failure is no longer requeued (left in `error` for a manual action). |
+| `persistence.driver` | enum `in_memory` \| `doctrine` \| `custom` | `doctrine` if `doctrine/orm` is installed, else `in_memory` | Persistence adapter. |
+| `persistence.entity_manager` | string | `default` | Entity manager that gets the mapping (driver `doctrine`). **Use a dedicated entity manager** (see [Doctrine](#doctrine)): the repositories flush the whole unit of work of the entity manager they use. |
+| `persistence.customer_registration_repository` | string \| null | `null` | Service id of your `CustomerRegistrationRepository` (driver `custom`). |
+| `persistence.payment_request_repository` | string \| null | `null` | Service id of your `PaymentRequestRepository` (driver `custom`). |
+| `lock.enabled` | `auto` \| bool | `auto` | Non-blocking lock per command / handler and tenant (see [Locks](#locks-against-overlapping-runs)). `auto`: enabled when `symfony/lock` is installed and the factory service exists; `true`: required (the container fails to build without the factory service, or without `symfony/lock`); `false`: disabled. |
+| `lock.factory` | string | `lock.factory` | Service id of a `Symfony\Component\Lock\LockFactory`. |
+| `lock.ttl` | float >= 1 | `3600.0` | Seconds after which the lock of a crashed process expires. Set it above the longest run of a command. |
+| `messenger.enabled` | bool | `false` | Registers the Messenger handlers. |
+| `messenger.bus` | string | `messenger.default_bus` | Bus used by the auto-submit listener. |
+| `messenger.auto_submit` | bool | `false` | Dispatches the submit messages when a registration / payment request is created. |
+
+Validation rules enforced at container build time:
+
+- `credentials` and `credentials_provider` are mutually exclusive, and one of them is required.
+- `messenger.auto_submit` requires `messenger.enabled`.
+- `lock.enabled: true` requires `symfony/lock`.
+- `workflow.default_page_size` must not exceed `workflow.max_page_size`.
+- The `custom` driver requires both repository service ids.
+- `business_timezone` must be a known time zone and the durations (`settled_max_age`, `unknown_status_max_age`, `max_polling_age`, `stale_submission_after`) valid ISO 8601 intervals.
+
+The `in_memory` driver keeps everything in the process memory: use it for tests only.
+
+### Dedicated cache pool for the access tokens
+
+The access tokens are stored in the `token_store.cache_pool` pool (`cache.app` by default). Declare a dedicated pool, so
+that `cache:pool:clear cache.app` (a routine deployment step) does not force a new token request for every tenant, and
+so that the tokens live in an adapter you control (Redis with authentication, for instance):
+
+```yaml
+framework:
+    cache:
+        pools:
+            urssaf.token_cache:
+                adapter: cache.adapter.redis
+                provider: '%env(REDIS_DSN)%'
+
+urssaf_tiers_prestations:
+    token_store: { cache_pool: urssaf.token_cache }
+```
+
+The pool must be shared by every process that calls URSSAF (web, workers, cron): a per-process `array` adapter would
+request a token per run. Tokens are secrets: do not expose the pool through a cache dashboard or a shared namespace.
+
+## Console commands
+
+Tenants of a command are processed one after the other; every command (except `--dry-run`) takes a lock per tenant when
+the lock is enabled: an overlapping run prints `Already running (lock "urssaf_tps.<operation>.<tenant>" is held): skipped.`
+and exits with `0` (see [Locks](#locks-against-overlapping-runs)).
+
+All commands accept `--limit=N` (positive integer, capped by the workflow policy) and `--dry-run` (lists what would be
+done without calling URSSAF or changing anything), and print a table of the processed items followed by the count of
+each outcome.
+
+| Command | Purpose | `--tenant` |
+|---|---|---|
+| `urssaf:customers:submit-pending` | Submit the pending registrations (method 010). | optional, default: configured `tenants` |
+| `urssaf:customers:sync-pairing` | Poll the pairing status of the registrations awaiting pairing, blocked or mandate expired, least recently updated first (method 020). | optional, default: every tenant with such registrations |
+| `urssaf:customers:reconcile-stale` | Settle the registrations left `submitting` for `stale_submission_after`: URSSAF offers no way to look them up, so each one is moved to `error` (cause `urssaf.submission_outcome_unknown`, outcome `manual_review`) and never resent automatically; an operator checks the customer and retries it. | none (all tenants) |
+| `urssaf:payment-requests:submit-pending` | Submit the pending payment requests (method 050), batches of `batch_size`. | optional, default: configured `tenants` |
+| `urssaf:payment-requests:sync-statuses` | Poll the status of the submitted payment requests (method 070). | optional, default: every tenant with requests to poll |
+| `urssaf:payment-requests:reconcile-stale` | Reconcile the stale `submitting` payment requests: searches them at URSSAF (method 070); found => `submitted`, proven absent => back to `pending` for the next submit run. The command itself never sends a request. | none (all tenants) |
+| `urssaf:requeue-invalid-credentials` | Move the records refused for invalid credentials back to `pending`, once the credentials are fixed. | required |
+
+Exit codes: `0` on success; `1` when an item ended `failed`, `invalid_credentials` or `unconfirmed`, or when a package
+exception (`UrssafException`) or an invalid option (for example `--limit=0`, a missing `--tenant`, or no tenant to
+process) stops the command. The message is printed as an error.
+
+Outcomes (`Application\Dto\ItemOutcome`): `not_found`, `not_claimed`, `accepted`, `rejected`, `invalid_credentials`,
+`requeued`, `exhausted`, `unconfirmed`, `manual_review`, `changed`, `unchanged`, `unknown_status`, `ignored`, `failed`, `reconciled`.
+
+## Messenger
+
+With `messenger.enabled: true`, the following messages (namespace `Bridge\Symfony\Message`) are handled by the handlers
+of `Bridge\Symfony\MessageHandler`. They are plain `final readonly` classes holding scalars, so they serialize with any
+Messenger serializer.
+
+| Message | Properties | Effect |
+|---|---|---|
+| `SubmitCustomerRegistrationMessage` | `registrationId` | Sends one pending registration (method 010). |
+| `SubmitPaymentRequestsMessage` | `tenantId`, `paymentRequestIds` (list) | Sends the given payment requests of one tenant (method 050). |
+| `SyncTenantCustomerPairingMessage` | `tenantId` | Polls the pairing status of the tenant's registrations (method 020). |
+| `SyncTenantPaymentStatusesMessage` | `tenantId` | Polls the status of the tenant's submitted payment requests (method 070). |
+
+Failure mapping (`MessageFailures`):
+
+- `RetryableException` (URSSAF unavailable, rate limit exceeded...) => `RecoverableMessageHandlingException`: the
+  message is retried by the retry strategy of the transport, with the delay requested by URSSAF (`Retry-After`) or by
+  the local rate limiter when known.
+- Operation already running for the tenant (lock held) => `RecoverableMessageHandlingException` with a 30 s delay: the
+  message is retried later instead of being lost or run concurrently (see [Locks](#locks-against-overlapping-runs)).
+- Any other `UrssafException` => `UnrecoverableMessageHandlingException`: retrying the same message cannot succeed
+  (it goes straight to the failure transport).
+- Failures of other origins (database down...) are left to the retry strategy of the host.
+
+### auto_submit
+
+With `messenger.auto_submit: true`, an `AutoSubmitListener` listens to the domain events
+`CustomerRegistrationRequested` and `PaymentRequestCreated` and dispatches `SubmitCustomerRegistrationMessage` /
+`SubmitPaymentRequestsMessage` on the configured bus. Domain events are published after the transaction commit, so the
+consumer always sees the record. The pairing and status polling are still driven by cron (commands) or by your own
+scheduler dispatching the `SyncTenant*` messages.
+
+## Locks against overlapping runs
+
+Two crons that overlap, a cron racing a Messenger worker, or two workers handling the same tenant could poll or submit
+the same records at the same time. The atomic claims keep that safe (a record is never sent twice) but wasteful, and
+URSSAF quotas are per tenant. When `symfony/lock` is installed, every console command and Messenger handler takes a
+**non-blocking** lock named `urssaf_tps.<operation>.<scope>` before it works, and releases it afterwards:
+
+| Operation | Used by | Scope |
+|---|---|---|
+| `customers.submit` | `urssaf:customers:submit-pending` | tenant |
+| `customers.submit` | `SubmitCustomerRegistrationMessage` | registration id |
+| `payment-requests.submit` | `urssaf:payment-requests:submit-pending`, `SubmitPaymentRequestsMessage` | tenant |
+| `customers.sync-pairing` | `urssaf:customers:sync-pairing`, `SyncTenantCustomerPairingMessage` | tenant, or `*` without `--tenant` |
+| `payment-requests.sync-statuses` | `urssaf:payment-requests:sync-statuses`, `SyncTenantPaymentStatusesMessage` | tenant, or `*` without `--tenant` |
+| `payment-requests.reconcile-stale` | `urssaf:payment-requests:reconcile-stale` | `*` |
+| `customers.reconcile-stale` | `urssaf:customers:reconcile-stale` | `*` |
+| `requeue-invalid-credentials` | `urssaf:requeue-invalid-credentials` | tenant |
+
+When the lock is already held: a **command** prints that the operation is already running and exits with `0` (the run
+that holds the lock does the work); a **Messenger handler** throws `RecoverableMessageHandlingException` with a 30 s delay,
+so the message is retried by the transport's retry strategy. `--dry-run` takes no lock.
+
+A run without `--tenant` (scope `*`) and a run for one tenant use different locks and may overlap; schedule one or the
+other. A tenant that is busy is skipped, the other tenants of the same run are still processed.
+
+Setup:
+
+```bash
+composer require symfony/lock
+```
+
+```yaml
+framework:
+    lock: '%env(LOCK_DSN)%'   # redis://..., or `flock`; must be shared by every host that runs the crons / workers
+
+urssaf_tiers_prestations:
+    lock: { enabled: auto, factory: lock.factory, ttl: 3600 }
+```
+
+The store must be visible to all the processes that may overlap: `flock` only protects processes of the same machine,
+use a Redis / database / Zookeeper store otherwise. `ttl` bounds how long the lock of a crashed process blocks the
+operation. Without `symfony/lock` (or with `enabled: false`) everything just runs, protected by the claims only.
+
+## Doctrine
+
+When the driver is `doctrine` and DoctrineBundle is registered, the bundle prepends the Doctrine configuration: the
+custom DBAL types and the XML mapping (see [doctrine.md](doctrine.md)). With a non-default `entity_manager`, the mapping
+is attached to that entity manager only.
+
+**Use a dedicated entity manager** (`persistence.entity_manager: urssaf`, with its own DBAL connection). The repositories
+`flush()` on every save and a Doctrine flush writes *all* pending changes of the entity manager: on a shared entity
+manager, a package call would also flush (and, on failure, roll back) half-finished changes of your own entities.
+`DoctrineTransactionManager` detaches only the package entities after a rollback and never clears your entities.
+
+The bundle does not touch `doctrine.orm.auto_generate_proxy_classes`: the mapped entities are not `final` (final by
+convention), so the proxy cache warmer can pre-generate their proxies in every mode.
+
+## Translations
+
+The violation codes (`<subject>.<reason>`, for example `birth_date.in_future`) are translatable messages of the
+translation domain `urssaf_tiers_prestations`. The bundle ships
+`Resources/translations/urssaf_tiers_prestations.en.yaml`.
+
+To add French (or any locale): create `translations/urssaf_tiers_prestations.fr.yaml` in your application, with the
+same keys as the English file:
+
+```yaml
+"birth_date.in_future": "La date de naissance ne peut pas etre dans le futur."
+"customer_registration.not_found": "Inscription du client introuvable."
+```
+
+Keys defined in your application's `translations/` directory also override the shipped English messages. Translate a
+violation with `$translator->trans($violation->code(), [], 'urssaf_tiers_prestations')` (the message keys are the
+violation codes; `Violation::params()` holds the scalar parameters of the violation).

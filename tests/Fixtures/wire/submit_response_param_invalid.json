@@ -1,0 +1,11 @@
+[
+  {
+    "idClient": "11000000000104",
+    "idDemandePaiement": "",
+    "numFactureTiers": "11000000000104",
+    "statut": "10",
+    "errors": [
+      { "code": "PARAM_INVALIDE", "message": "Requete incorrecte", "description": "Le format du champ numDemandeExterne est incorrect" }
+    ]
+  }
+]

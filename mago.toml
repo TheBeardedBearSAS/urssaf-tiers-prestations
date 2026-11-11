@@ -1,0 +1,26 @@
+# Mago is pinned through composer (carthage-software/mago). Only `lint` and `analyze` are used:
+# php-cs-fixer is the single source of truth for formatting, so `mago fmt` must not be run.
+php-version = "8.2"
+
+[source]
+paths = ["src", "tests"]
+includes = ["vendor"]
+excludes = ["var"]
+
+[linter]
+integrations = ["phpunit"]
+
+[linter.rules]
+# Every rule is enabled by default; add per-rule overrides here only when justified.
+# Tests use static::assert*(): PHPStan strict rules forbid dynamic calls to static methods.
+assertion-style = { style = "static" }
+# Wire DTOs mirror URSSAF payloads (up to 12 fields); regular methods stay at 5 parameters max.
+# Conflicts with ergebnis.noNamedArgument (PHPStan), which wins: positional arguments only.
+literal-named-argument = { enabled = false }
+excessive-parameter-list = { threshold = 5, constructor-threshold = 12 }
+
+[analyzer]
+find-unused-definitions = true
+find-unused-expressions = true
+check-throws = false
+strict-list-index-checks = true

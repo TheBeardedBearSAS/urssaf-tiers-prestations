@@ -1,0 +1,6 @@
+{
+  "errors": [
+    { "code": "ERR_NBRE_MAX_RESULTAT", "message": "Trop de resultats", "description": "Plus de 10 resultats" }
+  ],
+  "infoDemandePaiements": []
+}

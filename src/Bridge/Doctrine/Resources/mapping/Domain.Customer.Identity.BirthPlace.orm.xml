@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <!-- Born abroad: department and municipality are NULL (the embeddable is always instantiated, its parts are nullable). -->
+    <embeddable name="TheBeardedBear\UrssafTiersPrestations\Domain\Customer\Identity\BirthPlace">
+        <field name="country" type="urssaf_tps_country_code" column="birth_country_code" length="5"/>
+        <field name="department" type="urssaf_tps_department_code" column="birth_department_code" length="3" nullable="true"/>
+        <field name="municipalityCode" type="urssaf_tps_birth_municipality_code" column="birth_municipality_code" length="3" nullable="true"/>
+        <field name="municipalityName" type="urssaf_tps_birth_municipality_name" column="birth_municipality_name" length="50" nullable="true"/>
+    </embeddable>
+</doctrine-mapping>
