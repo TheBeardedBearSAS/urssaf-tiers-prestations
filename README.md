@@ -298,8 +298,10 @@ make infection    # mutation testing, 100 % MSI
 make ci           # the full quality gate
 ```
 
-The CI runs the same gates (`.gitlab-ci.yml`: one job per gate, tests on PHP 8.2 / 8.3 / 8.4 with the lowest and highest
-dependencies, PHP 8.5 allowed to fail, manual contract job).
+The CI runs the same gates (GitHub Actions, `.github/workflows/ci.yml`: one job per gate, tests on PHP 8.2 / 8.3 / 8.4
+with the lowest and highest dependencies, PHP 8.5 allowed to fail). The contract job is manual (Actions > CI > Run workflow,
+`contract` checked) and reads the repository secrets `URSSAF_SANDBOX_CLIENT_ID` / `URSSAF_SANDBOX_CLIENT_SECRET` of the
+`urssaf-sandbox` environment.
 
 Quality gates (all blocking): PHPUnit with 100 % coverage, Infection with 100 % MSI, PHPStan at level max, Mago
 (`make mago`), PHP-CS-Fixer (`make cs`, `make cs-fix`), Rector (`make rector`), Deptrac (`make deptrac`), composer

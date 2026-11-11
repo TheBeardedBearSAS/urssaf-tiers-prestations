@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- CI moved from GitLab CI to GitHub Actions (`.github/workflows/ci.yml`), same gates and PHP matrix.
+
 ## [0.1.0] - 2026-11-11
 
 ### Added
