@@ -1,0 +1,31 @@
+{
+  "adresseMail": "jeanne.durand@contact.fr",
+  "adressePostale": {
+    "codeCommune": "69101",
+    "codePays": "99100",
+    "codePostal": "69001",
+    "codeTypeVoie": "R",
+    "complement": "Batiment A",
+    "lettreVoie": "B",
+    "libelleVoie": "du Soleil",
+    "lieuDit": "Le Beyssat",
+    "numeroVoie": "8",
+    "libelleCommune": "LYON 01"
+  },
+  "civilite": "1",
+  "coordonneeBancaire": {
+    "bic": "BNPAFRPPXXX",
+    "iban": "FR7630006000011234567890189",
+    "titulaire": "Mme Jeanne Martin"
+  },
+  "dateNaissance": "1980-03-29T00:00:00.000Z",
+  "lieuNaissance": {
+    "codePaysNaissance": "99100",
+    "communeNaissance": { "codeCommune": "001", "libelleCommune": "Lyon" },
+    "departementNaissance": "069"
+  },
+  "nomNaissance": "Durand",
+  "nomUsage": "Martin",
+  "numeroTelephonePortable": "0605040302",
+  "prenoms": "Eric-Antoine"
+}

@@ -1,0 +1,72 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Fails unless lines, methods and classes coverage are all 100% in a PHPUnit clover report.
+ *
+ * Usage: bin/check-coverage [path/to/clover.xml]
+ */
+
+$cloverPath = $argv[1] ?? __DIR__ . '/../var/coverage/clover.xml';
+
+if (!is_file($cloverPath)) {
+    fwrite(STDERR, sprintf("Clover report not found: %s\n", $cloverPath));
+    exit(2);
+}
+
+$previous = libxml_use_internal_errors(true);
+$xml = simplexml_load_file($cloverPath);
+libxml_use_internal_errors($previous);
+
+if (false === $xml) {
+    fwrite(STDERR, sprintf("Clover report is not valid XML: %s\n", $cloverPath));
+    exit(2);
+}
+
+$totals = [
+    'lines' => ['covered' => 0, 'total' => 0],
+    'methods' => ['covered' => 0, 'total' => 0],
+    'classes' => ['covered' => 0, 'total' => 0],
+];
+
+foreach ($xml->xpath('//class') ?: [] as $class) {
+    $metrics = $class->metrics;
+    $methods = (int) $metrics['methods'];
+    $coveredMethods = (int) $metrics['coveredmethods'];
+    $statements = (int) $metrics['statements'];
+    $coveredStatements = (int) $metrics['coveredstatements'];
+
+    $totals['methods']['total'] += $methods;
+    $totals['methods']['covered'] += $coveredMethods;
+    $totals['lines']['total'] += $statements;
+    $totals['lines']['covered'] += $coveredStatements;
+    ++$totals['classes']['total'];
+
+    if ($coveredMethods === $methods && $coveredStatements === $statements) {
+        ++$totals['classes']['covered'];
+    }
+}
+
+$failed = false;
+
+foreach ($totals as $name => $counts) {
+    $percent = 0 === $counts['total'] ? 100.0 : $counts['covered'] / $counts['total'] * 100;
+    $ok = $counts['covered'] === $counts['total'];
+    $failed = $failed || !$ok;
+
+    fwrite(
+        $ok ? STDOUT : STDERR,
+        sprintf(
+            "%-8s %6.2f%% (%d/%d) %s\n",
+            $name,
+            $percent,
+            $counts['covered'],
+            $counts['total'],
+            $ok ? 'OK' : 'FAIL',
+        ),
+    );
+}
+
+exit($failed ? 1 : 0);

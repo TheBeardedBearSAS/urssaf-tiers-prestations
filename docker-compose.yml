@@ -1,0 +1,17 @@
+services:
+  php:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        PHP_VERSION: "${PHP_VERSION:-8.2}"
+    image: urssaf-tiers-prestations-php:${PHP_VERSION:-8.2}
+    working_dir: /app
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      - .:/app
+    environment:
+      COMPOSER_HOME: /app/var/composer
+      COMPOSER_CACHE_DIR: /app/var/composer/cache
+      XDEBUG_MODE: "${XDEBUG_MODE:-off}"
+      HOME: /app/var

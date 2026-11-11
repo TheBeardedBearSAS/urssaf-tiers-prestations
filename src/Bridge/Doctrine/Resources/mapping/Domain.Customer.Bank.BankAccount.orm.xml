@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <embeddable name="TheBeardedBear\UrssafTiersPrestations\Domain\Customer\Bank\BankAccount">
+        <field name="iban" type="urssaf_tps_iban" column="iban" length="34"/>
+        <field name="bic" type="urssaf_tps_bic" column="bic" length="11"/>
+        <field name="holder" type="urssaf_tps_account_holder" column="account_holder" length="100"/>
+    </embeddable>
+</doctrine-mapping>

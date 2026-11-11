@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <embeddable name="TheBeardedBear\UrssafTiersPrestations\Domain\Customer\ContactDetails">
+        <field name="mobilePhone" type="urssaf_tps_mobile_phone_number" column="mobile_phone" length="12"/>
+        <field name="email" type="urssaf_tps_email_address" column="email" length="255"/>
+        <embedded name="address" class="TheBeardedBear\UrssafTiersPrestations\Domain\Customer\Address\PostalAddress" use-column-prefix="false"/>
+    </embeddable>
+</doctrine-mapping>

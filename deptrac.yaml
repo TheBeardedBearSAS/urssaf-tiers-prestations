@@ -1,0 +1,60 @@
+deptrac:
+  paths:
+    - ./src
+    - ./vendor/psr
+  cache_file: var/.deptrac.cache
+  layers:
+    - name: Domain
+      collectors:
+        - type: directory
+          value: src/Domain/.*
+    - name: Application
+      collectors:
+        - type: directory
+          value: src/Application/.*
+    - name: Infrastructure
+      collectors:
+        - type: directory
+          value: src/Infrastructure/.*
+    - name: SymfonyBridge
+      collectors:
+        - type: directory
+          value: src/Bridge/Symfony/.*
+    - name: DoctrineBridge
+      collectors:
+        - type: directory
+          value: src/Bridge/Doctrine/.*
+    - name: Psr
+      collectors:
+        - type: classLike
+          value: ^Psr\\
+    - name: Symfony
+      collectors:
+        - type: classLike
+          value: ^Symfony\\
+    - name: Doctrine
+      collectors:
+        - type: classLike
+          value: ^Doctrine\\
+  ruleset:
+    Domain: ~
+    Application:
+      - Domain
+    Infrastructure:
+      - Application
+      - Domain
+      - Psr
+    DoctrineBridge:
+      - Domain
+      - Application
+      - Infrastructure
+      - Doctrine
+      - Psr
+    SymfonyBridge:
+      - Domain
+      - Application
+      - Infrastructure
+      - DoctrineBridge
+      - Symfony
+      - Doctrine
+      - Psr

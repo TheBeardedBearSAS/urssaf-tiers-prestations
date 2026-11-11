@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <!-- Registration of a customer with URSSAF (method 010 / 020). Identity and customer are embedded as columns; the
+         status is the embedded RegistrationStatus (queried by state, URSSAF id and last update). -->
+    <entity name="TheBeardedBear\UrssafTiersPrestations\Domain\Customer\CustomerRegistration" table="urssaf_tps_customer_registrations">
+        <unique-constraints>
+            <unique-constraint name="uniq_urssaf_tps_registration_external_reference" columns="tenant_id,external_reference"/>
+            <unique-constraint name="uniq_urssaf_tps_registration_urssaf_customer_id" columns="tenant_id,urssaf_customer_id"/>
+        </unique-constraints>
+        <indexes>
+            <index name="idx_urssaf_tps_registration_tenant_state" columns="tenant_id,state,updated_at"/>
+            <index name="idx_urssaf_tps_registration_state_updated" columns="state,updated_at"/>
+            <index name="idx_urssaf_tps_registration_stale" columns="state,last_attempt_at"/>
+        </indexes>
+        <id name="id" type="urssaf_tps_registration_id" column="id" length="64">
+            <generator strategy="NONE"/>
+        </id>
+        <field name="tenantId" type="urssaf_tps_tenant_id" column="tenant_id" length="64"/>
+        <field name="externalReference" type="urssaf_tps_external_reference" column="external_reference" length="191"/>
+        <field name="createdAt" type="urssaf_tps_instant" column="created_at"/>
+        <embedded name="customer" class="TheBeardedBear\UrssafTiersPrestations\Domain\Customer\Customer" use-column-prefix="false"/>
+        <embedded name="status" class="TheBeardedBear\UrssafTiersPrestations\Domain\Customer\RegistrationStatus" use-column-prefix="false"/>
+    </entity>
+</doctrine-mapping>

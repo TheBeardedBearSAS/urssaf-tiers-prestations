@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <!-- Query-side table of the payment requests (1:1 with urssaf_tps_payment_requests, same id): the columns the polling and
+         reconciliation queries filter on, written by the repository on every save. -->
+    <entity name="TheBeardedBear\UrssafTiersPrestations\Bridge\Doctrine\Entity\PaymentRequestProgress" table="urssaf_tps_payment_request_progress" read-only="true">
+        <indexes>
+            <index name="idx_urssaf_tps_progress_polling" columns="tenant_id,state,urssaf_status,last_polled_at"/>
+            <index name="idx_urssaf_tps_progress_urssaf_id" columns="tenant_id,urssaf_payment_request_id"/>
+        </indexes>
+        <id name="id" type="urssaf_tps_local_payment_request_id" column="id" length="64">
+            <generator strategy="NONE"/>
+        </id>
+        <field name="tenantId" type="urssaf_tps_tenant_id" column="tenant_id" length="64"/>
+        <field name="state" type="string" column="state" length="32" enum-type="TheBeardedBear\UrssafTiersPrestations\Domain\PaymentRequest\SubmissionState"/>
+        <field name="paymentRequestId" type="urssaf_tps_payment_request_id" column="urssaf_payment_request_id" length="64" nullable="true"/>
+        <field name="urssafStatus" type="string" column="urssaf_status" length="64" nullable="true"/>
+        <field name="lastStatusChangeAt" type="urssaf_tps_instant" column="last_status_change_at" nullable="true"/>
+        <field name="lastPolledAt" type="urssaf_tps_instant" column="last_polled_at" nullable="true"/>
+    </entity>
+</doctrine-mapping>

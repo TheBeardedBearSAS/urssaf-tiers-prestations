@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+namespace TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\DependencyInjection;
+
+/**
+ * Ids of the private services of the bundle that have no interface to be identified by.
+ */
+final class ServiceIds
+{
+    public const PSR_CLOCK = 'urssaf_tiers_prestations.psr_clock';
+    public const SYMFONY_HTTP_CLIENT = 'urssaf_tiers_prestations.http_client';
+    public const PSR18_CLIENT = 'urssaf_tiers_prestations.psr18_client';
+    public const API_CONFIGURATION = 'urssaf_tiers_prestations.api_configuration';
+    public const TOKEN_PROVIDER = 'urssaf_tiers_prestations.token_provider';
+    public const JSON_CLIENT = 'urssaf_tiers_prestations.json_client';
+}

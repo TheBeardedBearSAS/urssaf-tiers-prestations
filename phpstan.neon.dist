@@ -1,0 +1,64 @@
+includes:
+    - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+    # phpstan-strict-rules, -deprecation-rules, -phpunit, -symfony, -doctrine,
+    # shipmonk/phpstan-rules, ergebnis/phpstan-rules and tomasvotruba/type-coverage
+    # are registered automatically by phpstan/extension-installer.
+
+parameters:
+    level: max
+    paths:
+        - src
+        - tests
+        - bin
+    tmpDir: var/phpstan
+    checkMissingCallableSignature: true
+    checkTooWideReturnTypesInProtectedAndPublicMethods: true
+    checkUninitializedProperties: true
+    checkImplicitMixed: true
+    checkBenevolentUnionTypes: true
+    reportUnmatchedIgnoredErrors: true
+    treatPhpDocTypesAsCertain: false
+
+    type_coverage:
+        return: 100
+        param: 100
+        property: 100
+        constant: 100
+
+    ergebnis:
+        # AbstractBundle::loadExtension/prependExtension and CompilerPassInterface::process impose ContainerBuilder parameters.
+        noParameterWithContainerTypeDeclaration:
+            enabled: false
+        noExtends:
+            classesAllowedToBeExtended:
+                - DomainException
+                - LogicException
+                - RuntimeException
+                - TheBeardedBear\UrssafTiersPrestations\Domain\Exception\DomainException
+                # Framework extension points without an interface alternative (bridges only).
+                - Doctrine\DBAL\Types\Type
+                - Symfony\Component\HttpKernel\Bundle\AbstractBundle
+                - Symfony\Component\Console\Command\Command
+                - Symfony\Component\HttpKernel\Kernel
+        # Disabled rules (DDD value objects / domain model), each one justified:
+        # Optional value-object arguments and "withX" factories legitimately default (e.g. currency, locale).
+        noConstructorParameterWithDefaultValue:
+            enabled: false
+        # Optional domain concepts (e.g. end date, external identifier) are modelled as nullable parameters.
+        noParameterWithNullableTypeDeclaration:
+            enabled: false
+        # Repositories/finders return ?Entity for "not found" rather than throwing.
+        noNullableReturnTypeDeclaration:
+            enabled: false
+
+        # Doctrine generates lazy-loading proxies by extending the mapped entities, so the entities cannot be final;
+        # they are final by convention (@final phpdoc). Embeddables are never proxied and stay final.
+        final:
+            classesNotRequiredToBeAbstractOrFinal:
+                - TheBeardedBear\UrssafTiersPrestations\Domain\Customer\CustomerRegistration
+                - TheBeardedBear\UrssafTiersPrestations\Domain\PaymentRequest\PaymentRequest
+                - TheBeardedBear\UrssafTiersPrestations\Bridge\Doctrine\Entity\PaymentRequestProgress
+
+    shipmonkRules:
+        enableAllRules: true
+

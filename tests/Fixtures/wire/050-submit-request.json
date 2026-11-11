@@ -1,0 +1,27 @@
+[
+  {
+    "idTiersFacturation": "id-facturation",
+    "idClient": "6a56a628-b09e-8707-787e-10f218a2d550",
+    "dateNaissanceClient": "1980-03-01T00:00:00Z",
+    "numFactureTiers": "2022-AZ-00001",
+    "dateFacture": "2022-02-01T00:00:00Z",
+    "dateDebutEmploi": "2022-02-01T16:40:00Z",
+    "dateFinEmploi": "2022-02-01T16:45:00Z",
+    "mntAcompte": 2.75,
+    "dateVersementAcompte": "2022-02-01T00:00:00Z",
+    "mntFactureTTC": 11.02,
+    "mntFactureHT": 10.02,
+    "inputPrestations": [
+      {
+        "codeNature": "60", "quantite": 1, "unite": "HEURE", "mntUnitaireTTC": 5.51, "mntPrestationTTC": 5.51,
+        "mntPrestationHT": 5.01, "mntPrestationTVA": 0.5, "dateDebutEmploi": "2022-02-01T16:40:00Z",
+        "dateFinEmploi": "2022-02-01T16:45:00Z", "complement1": "Complément 1", "complement2": "SAP123456789"
+      },
+      {
+        "codeNature": "30", "codeActivite": "30A001", "quantite": 1, "unite": "FORFAIT", "mntUnitaireTTC": 5.51,
+        "mntPrestationTTC": 5.51, "mntPrestationHT": 5.01, "mntPrestationTVA": 0.5,
+        "dateDebutEmploi": "2022-02-01T16:40:00Z", "dateFinEmploi": "2022-02-01T16:45:00Z", "complement2": "SAP123456780"
+      }
+    ]
+  }
+]

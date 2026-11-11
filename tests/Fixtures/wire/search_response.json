@@ -1,0 +1,17 @@
+{
+  "errors": [],
+  "infoDemandePaiements": [
+    {
+      "idDemandePaiement": "aaaa1111-2222-3b3b-4d4-55e666ffff77",
+      "demandePaiement": { "numFactureTiers": "2022-AZ-00001", "mntFactureTTC": 11.02 },
+      "statut": { "code": "70", "libelle": "Payee" },
+      "infoRejet": { "code": "CONTEST_AUTRE", "commentaire": "La prestation n'a pas ete honoree." },
+      "infoVirement": { "mntVirement": 2000, "dateVirement": "2019-12-05T00:00:00Z" }
+    },
+    {
+      "idDemandePaiement": "bbbb1111-2222-3b3b-4d4-55e666ffff88",
+      "demandePaiement": { "numFactureTiers": "2022-AZ-00002" },
+      "statut": "30"
+    }
+  ]
+}

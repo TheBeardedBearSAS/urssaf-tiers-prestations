@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <embeddable name="TheBeardedBear\UrssafTiersPrestations\Domain\PaymentRequest\Invoice">
+        <embedded name="customer" class="TheBeardedBear\UrssafTiersPrestations\Domain\PaymentRequest\InvoicedCustomer" use-column-prefix="false"/>
+        <field name="billingThirdPartyId" type="urssaf_tps_billing_third_party_id" column="billing_third_party_id" length="50"/>
+        <field name="number" type="urssaf_tps_invoice_number" column="invoice_number" length="50"/>
+        <field name="date" type="urssaf_tps_calendar_date" column="invoice_date"/>
+        <embedded name="employmentPeriod" class="TheBeardedBear\UrssafTiersPrestations\Domain\Shared\EmploymentPeriod" use-column-prefix="false"/>
+        <field name="totalInclTax" type="urssaf_tps_money" column="total_incl_tax"/>
+        <field name="totalExclTax" type="urssaf_tps_money" column="total_excl_tax"/>
+        <field name="lines" type="urssaf_tps_service_lines" column="service_lines"/>
+        <!-- Optional deposit: JSON, SQL NULL when absent (an all-nullable embeddable would be hydrated as a broken object). -->
+        <field name="deposit" type="urssaf_tps_deposit" column="deposit" nullable="true"/>
+    </embeddable>
+</doctrine-mapping>

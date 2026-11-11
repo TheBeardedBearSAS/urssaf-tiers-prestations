@@ -1,0 +1,31 @@
+{
+  "civilite": "1",
+  "nomNaissance": "Durand",
+  "nomUsage": "Martin",
+  "prenoms": "Eric-Antoine",
+  "dateNaissance": "1980-03-29T00:00:00Z",
+  "lieuNaissance": {
+    "codePaysNaissance": "99100",
+    "departementNaissance": "069",
+    "communeNaissance": { "codeCommune": "001", "libelleCommune": "Lyon" }
+  },
+  "numeroTelephonePortable": "0605040302",
+  "adresseMail": "jeanne.durand@contact.fr",
+  "adressePostale": {
+    "numeroVoie": "8",
+    "lettreVoie": "B",
+    "codeTypeVoie": "R",
+    "libelleVoie": "du Soleil",
+    "complement": "Batiment A",
+    "lieuDit": "Le Beyssat",
+    "libelleCommune": "LYON 01",
+    "codeCommune": "69101",
+    "codePostal": "69001",
+    "codePays": "99100"
+  },
+  "coordonneeBancaire": {
+    "bic": "BNPAFRPPXXX",
+    "iban": "FR7630006000011234567890189",
+    "titulaire": "Mme Jeanne Martin"
+  }
+}

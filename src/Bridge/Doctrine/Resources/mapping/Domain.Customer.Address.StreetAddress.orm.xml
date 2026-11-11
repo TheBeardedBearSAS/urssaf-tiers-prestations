@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <!-- Every part is optional: an address without street parts is stored as NULL columns and hydrated as null parts. -->
+    <embeddable name="TheBeardedBear\UrssafTiersPrestations\Domain\Customer\Address\StreetAddress">
+        <field name="number" type="urssaf_tps_street_number" column="street_number" length="8" nullable="true"/>
+        <field name="letter" type="urssaf_tps_street_letter" column="street_letter" length="4" nullable="true"/>
+        <field name="typeCode" type="urssaf_tps_street_type_code" column="street_type_code" length="8" nullable="true"/>
+        <field name="name" type="urssaf_tps_street_name" column="street_name" length="64" nullable="true"/>
+        <field name="complement" type="urssaf_tps_address_complement" column="street_complement" length="64" nullable="true"/>
+        <field name="locality" type="urssaf_tps_locality" column="street_locality" length="64" nullable="true"/>
+    </embeddable>
+</doctrine-mapping>

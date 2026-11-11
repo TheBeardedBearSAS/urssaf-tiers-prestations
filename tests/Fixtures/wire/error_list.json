@@ -1,0 +1,4 @@
+[
+  { "code": "ERREUR_VALIDATION", "message": "Erreur de saisie", "description": "Erreur de saisie" },
+  { "code": " ERR_DATE_NAISSANCE_FUTUR ", "message": "Date de naissance dans le futur", "description": "Erreur" }
+]

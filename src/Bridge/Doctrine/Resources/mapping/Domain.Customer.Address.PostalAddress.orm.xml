@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <embeddable name="TheBeardedBear\UrssafTiersPrestations\Domain\Customer\Address\PostalAddress">
+        <embedded name="street" class="TheBeardedBear\UrssafTiersPrestations\Domain\Customer\Address\StreetAddress" use-column-prefix="false"/>
+        <field name="municipalityName" type="urssaf_tps_address_municipality_name" column="address_municipality_name" length="50"/>
+        <field name="municipalityCode" type="urssaf_tps_municipality_code" column="address_municipality_code" length="5"/>
+        <field name="postalCode" type="urssaf_tps_postal_code" column="address_postal_code" length="5"/>
+        <field name="countryCode" type="urssaf_tps_country_code" column="address_country_code" length="5"/>
+    </embeddable>
+</doctrine-mapping>
