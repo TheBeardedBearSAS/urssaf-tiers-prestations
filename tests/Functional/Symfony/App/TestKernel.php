@@ -16,6 +16,7 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
+use TheBeardedBear\UrssafTiersPrestations\Bridge\Doctrine\DoctrineIntegration;
 use TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\Message\SubmitCustomerRegistrationMessage;
 use TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\Message\SubmitPaymentRequestsMessage;
 use TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\UrssafTiersPrestationsBundle;
@@ -165,7 +166,7 @@ final class TestKernel extends BaseKernel
         if ($this->doctrine !== false) {
             $container->extension('doctrine', \is_array($this->doctrine) ? $this->doctrine : [
                 'dbal' => ['driver' => 'pdo_sqlite', 'memory' => true],
-                'orm' => ['enable_lazy_ghost_objects' => true],
+                'orm' => ['enable_lazy_ghost_objects' => true, 'enable_native_lazy_objects' => DoctrineIntegration::nativeLazyObjectsAvailable()],
             ]);
         }
         $container->extension('urssaf_tiers_prestations', array_replace_recursive(self::defaults(), $this->bundleConfig));
@@ -176,6 +177,10 @@ final class TestKernel extends BaseKernel
         $services->set('test.payment_requests', InMemoryPaymentRequestRepository::class)->public();
         $services->set('test.token_store', InMemoryTokenStore::class)->public();
         $services->set('test.credentials', InMemoryCredentialsProvider::class)->args([[]])->public();
+        if ($this->lock) {
+            // Kept even when nothing uses it (lock disabled): the oldest supported Symfony removes unused private services.
+            $services->alias('test.lock_factory', 'lock.factory')->public();
+        }
         $services->set('logger', CapturingLogger::class)->public();
         $services->set('clock', MockClock::class)->args([self::NOW])->public();
     }

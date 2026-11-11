@@ -49,6 +49,25 @@ $configuration->setMetadataDriverImpl(DoctrineIntegration::mappingDriver());   /
 directory, `MAPPING_NAMESPACE` the namespace prefix handled by the simplified driver, and
 `doctrineBundleConfiguration()` the array that the Symfony bundle prepends to the `doctrine` extension.
 
+### Lazy loading and PHP 8.4
+
+Doctrine ORM 3 loads lazy references either through generated proxies built on the lazy ghosts of `symfony/var-exporter`
+6.4 / 7 (the only option before PHP 8.4, and the default), or through the native lazy objects of PHP 8.4 (ORM 3.4+). The
+lazy ghosts are gone from `symfony/var-exporter` 8: with that version, and without native lazy objects, the ORM throws
+"Symfony LazyGhost is not available" as soon as it builds its proxy factory.
+
+Without the Symfony bundle, enable the native objects yourself on PHP 8.4+:
+
+```php
+if (DoctrineIntegration::nativeLazyObjectsAvailable()) {   // PHP >= 8.4 and an ORM that implements them
+    $configuration->enableNativeLazyObjects(true);
+}
+```
+
+`doctrineBundleConfiguration()` adds `orm.enable_native_lazy_objects: true` under the same condition
+(`doctrineBundleConfigurationWith([...])` takes the ORM options explicitly); with the Symfony bundle this is done for
+you, and your own configuration still wins.
+
 Then build the repositories and the transaction manager from your `EntityManagerInterface`:
 
 ```php

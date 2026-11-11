@@ -119,7 +119,9 @@ Failure mapping (`MessageFailures`):
 
 - `RetryableException` (URSSAF unavailable, rate limit exceeded...) => `RecoverableMessageHandlingException`: the
   message is retried by the retry strategy of the transport, with the delay requested by URSSAF (`Retry-After`) or by
-  the local rate limiter when known.
+  the local rate limiter when known. The delay needs a symfony/messenger version whose
+  `RecoverableMessageHandlingException` accepts it; on older versions (6.4) the exception carries no delay and the retry
+  strategy of the transport alone decides.
 - Operation already running for the tenant (lock held) => `RecoverableMessageHandlingException` with a 30 s delay: the
   message is retried later instead of being lost or run concurrently (see [Locks](#locks-against-overlapping-runs)).
 - Any other `UrssafException` => `UnrecoverableMessageHandlingException`: retrying the same message cannot succeed
@@ -190,6 +192,13 @@ manager, a package call would also flush (and, on failure, roll back) half-finis
 
 The bundle does not touch `doctrine.orm.auto_generate_proxy_classes`: the mapped entities are not `final` (final by
 convention), so the proxy cache warmer can pre-generate their proxies in every mode.
+
+**Native lazy objects (PHP 8.4+).** On PHP 8.4 or higher, with an ORM that implements them (3.4+), the bundle also
+prepends `doctrine.orm.enable_native_lazy_objects: true`: the ORM then uses PHP lazy objects instead of generated
+proxies, which is required when `symfony/var-exporter` 8 is installed (it no longer ships the lazy ghosts the ORM
+proxies rely on; without it the ORM throws "Symfony LazyGhost is not available"). It is only a default: your own
+`doctrine` configuration wins, for instance `enable_native_lazy_objects: false` with `symfony/var-exporter` 6.4 or 7. On
+PHP 8.2 and 8.3 nothing is prepended.
 
 ## Translations
 

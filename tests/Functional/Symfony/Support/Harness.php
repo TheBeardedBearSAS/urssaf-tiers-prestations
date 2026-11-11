@@ -12,6 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Clock\MockClock;
 use Symfony\Component\Console\Tester\CommandTester;
 use TheBeardedBear\UrssafTiersPrestations\Tests\Functional\Symfony\App\TestKernel;
+use Throwable;
 
 /**
  * A booted test application with the scripted URSSAF platform.
@@ -24,7 +25,7 @@ final readonly class Harness
 
     private ContainerInterface $testContainer;
 
-    private function __construct(public TestKernel $kernel)
+    private function __construct(public TestKernel $kernel, private PhpHandlerGuard $handlers)
     {
         $container = $kernel->getContainer()->get('test.service_container');
         \assert($container instanceof ContainerInterface, 'The test container is not available.');
@@ -40,15 +41,23 @@ final readonly class Harness
      */
     public static function boot(array $config = [], bool|array $doctrine = false, bool $messenger = false, bool $lock = false): self
     {
+        $handlers = PhpHandlerGuard::install();
         $kernel = new TestKernel($config, $doctrine, $messenger, $lock);
-        $kernel->boot();
+        try {
+            $kernel->boot();
+        } catch (Throwable $failure) {
+            $handlers->release();
 
-        return new self($kernel);
+            throw $failure;
+        }
+
+        return new self($kernel, $handlers);
     }
 
     public function __destruct()
     {
         $this->kernel->shutdown();
+        $this->handlers->release();
     }
 
     /**

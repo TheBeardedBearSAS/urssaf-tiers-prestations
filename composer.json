@@ -50,6 +50,7 @@
         "symfony/http-client": "^6.4 || ^7.4",
         "symfony/lock": "^6.4 || ^7.4",
         "symfony/messenger": "^6.4 || ^7.4",
+        "symfony/polyfill-php83": "^1.31",
         "symfony/uid": "^6.4 || ^7.4",
         "symfony/yaml": "^6.4 || ^7.4",
         "tomasvotruba/type-coverage": "^2.5"

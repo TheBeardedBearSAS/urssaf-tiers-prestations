@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace TheBeardedBear\UrssafTiersPrestations\Tests\Functional\Doctrine;
 
 use Doctrine\DBAL\Types\Type;
+use Doctrine\ORM\Configuration;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use stdClass;
 use TheBeardedBear\UrssafTiersPrestations\Bridge\Doctrine\DoctrineIntegration;
 use TheBeardedBear\UrssafTiersPrestations\Domain\Customer\CustomerRegistration;
 use TheBeardedBear\UrssafTiersPrestations\Domain\PaymentRequest\PaymentRequest;
+use TheBeardedBear\UrssafTiersPrestations\Tests\Functional\Doctrine\Support\NativeLazyOrmConfiguration;
 
 final class DoctrineIntegrationTest extends TestCase
 {
@@ -97,8 +101,43 @@ final class DoctrineIntegrationTest extends TestCase
                     ],
                 ],
             ],
-            DoctrineIntegration::doctrineBundleConfiguration(),
+            DoctrineIntegration::doctrineBundleConfigurationWith([]),
         );
+    }
+
+    public function testItAddsTheGivenOrmOptionsToTheBundleConfiguration(): void
+    {
+        $configuration = DoctrineIntegration::doctrineBundleConfigurationWith(['enable_native_lazy_objects' => true]);
+
+        static::assertTrue($configuration['orm']['enable_native_lazy_objects'] ?? false);
+        static::assertSame(DoctrineIntegration::doctrineBundleConfigurationWith([])['orm']['mappings'], $configuration['orm']['mappings']);
+        static::assertSame(DoctrineIntegration::types(), $configuration['dbal']['types']);
+    }
+
+    public function testTheNativeLazyObjectsAreDetectedFromTheRuntimeByDefault(): void
+    {
+        static::assertSame(
+            DoctrineIntegration::nativeLazyObjectsAvailable(),
+            \array_key_exists('enable_native_lazy_objects', DoctrineIntegration::doctrineBundleConfiguration()['orm']),
+        );
+        static::assertSame(
+            DoctrineIntegration::nativeLazyObjectsOptions(\PHP_VERSION_ID, Configuration::class) !== [],
+            DoctrineIntegration::nativeLazyObjectsAvailable(),
+        );
+        static::assertSame(
+            \PHP_VERSION_ID >= 80_400 && (new ReflectionClass(Configuration::class))->hasMethod('enableNativeLazyObjects'),
+            DoctrineIntegration::nativeLazyObjectsAvailable(),
+        );
+    }
+
+    public function testTheNativeLazyObjectsNeedPhp84AndAnOrmThatImplementsThem(): void
+    {
+        $enabled = ['enable_native_lazy_objects' => true];
+
+        static::assertSame($enabled, DoctrineIntegration::nativeLazyObjectsOptions(80_400, NativeLazyOrmConfiguration::class));
+        static::assertSame($enabled, DoctrineIntegration::nativeLazyObjectsOptions(80_500, NativeLazyOrmConfiguration::class));
+        static::assertSame([], DoctrineIntegration::nativeLazyObjectsOptions(80_399, NativeLazyOrmConfiguration::class));
+        static::assertSame([], DoctrineIntegration::nativeLazyObjectsOptions(80_400, stdClass::class));
     }
 
     /**

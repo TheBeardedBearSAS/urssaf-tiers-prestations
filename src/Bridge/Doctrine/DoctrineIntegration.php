@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace TheBeardedBear\UrssafTiersPrestations\Bridge\Doctrine;
 
 use Doctrine\DBAL\Types\Type;
+use Doctrine\ORM\Configuration;
 use Doctrine\ORM\Mapping\Driver\SimplifiedXmlDriver;
+use ReflectionClass;
 use TheBeardedBear\UrssafTiersPrestations\Bridge\Doctrine\Type\AccountHolderType;
 use TheBeardedBear\UrssafTiersPrestations\Bridge\Doctrine\Type\AddressComplementType;
 use TheBeardedBear\UrssafTiersPrestations\Bridge\Doctrine\Type\AddressMunicipalityNameType;
@@ -143,19 +145,61 @@ final class DoctrineIntegration
     }
 
     /**
-     * Configuration to prepend to the "doctrine" extension of doctrine-bundle: the types, and the XML mapping of the
-     * default entity manager (or of the entity manager named by the host, under "orm.entity_managers.<name>.mappings").
+     * Whether native lazy objects (PHP 8.4 lazy objects, used instead of generated proxies) can be enabled: they need
+     * PHP 8.4 and an ORM that implements them (3.4+).
+     */
+    public static function nativeLazyObjectsAvailable(): bool
+    {
+        return self::runtimeNativeLazyObjectsOptions() !== [];
+    }
+
+    /**
+     * The "orm" options that enable the native lazy objects, or none when the runtime cannot use them.
+     *
+     * @param class-string $ormConfiguration the ORM configuration class, which has "enableNativeLazyObjects()" from ORM 3.4
+     *
+     * @return array{enable_native_lazy_objects?: true}
+     */
+    public static function nativeLazyObjectsOptions(int $phpVersionId, string $ormConfiguration): array
+    {
+        if ($phpVersionId >= 80_400 && (new ReflectionClass($ormConfiguration))->hasMethod('enableNativeLazyObjects')) {
+            return ['enable_native_lazy_objects' => true];
+        }
+
+        return [];
+    }
+
+    /**
+     * Configuration to prepend to the "doctrine" extension of doctrine-bundle: the types, the XML mapping of the
+     * default entity manager (or of the entity manager named by the host, under "orm.entity_managers.<name>.mappings")
+     * and, when PHP and the ORM support them, the native lazy objects (symfony/var-exporter dropped the lazy ghosts the
+     * ORM proxies rely on in version 8). The host can still override it in its own "doctrine" configuration.
      *
      * @return array{
      *     dbal: array{types: array<non-empty-string, class-string<Type>>},
-     *     orm: array{mappings: array<string, array{type: string, is_bundle: bool, dir: string, prefix: string, alias: string}>}
+     *     orm: array{enable_native_lazy_objects?: true, mappings: array<string, array{type: string, is_bundle: bool, dir: string, prefix: string, alias: string}>}
      * }
      */
     public static function doctrineBundleConfiguration(): array
     {
+        return self::doctrineBundleConfigurationWith(self::runtimeNativeLazyObjectsOptions());
+    }
+
+    /**
+     * The configuration to prepend, with the given options on top of the "orm" section.
+     *
+     * @param array{enable_native_lazy_objects?: true} $ormOptions
+     *
+     * @return array{
+     *     dbal: array{types: array<non-empty-string, class-string<Type>>},
+     *     orm: array{enable_native_lazy_objects?: true, mappings: array<string, array{type: string, is_bundle: bool, dir: string, prefix: string, alias: string}>}
+     * }
+     */
+    public static function doctrineBundleConfigurationWith(array $ormOptions): array
+    {
         return [
             'dbal' => ['types' => self::types()],
-            'orm' => [
+            'orm' => $ormOptions + [
                 'mappings' => [
                     self::MAPPING_ALIAS => [
                         'type' => 'xml',
@@ -167,5 +211,13 @@ final class DoctrineIntegration
                 ],
             ],
         ];
+    }
+
+    /**
+     * @return array{enable_native_lazy_objects?: true}
+     */
+    private static function runtimeNativeLazyObjectsOptions(): array
+    {
+        return self::nativeLazyObjectsOptions(\PHP_VERSION_ID, Configuration::class);
     }
 }

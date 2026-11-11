@@ -9,7 +9,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
-- CI moved from GitLab CI to GitHub Actions (`.github/workflows/ci.yml`), same gates and PHP matrix.
+- CI moved from GitLab CI to GitHub Actions (`.github/workflows/ci.yml`), same gates and PHP matrix. The lowest-dependencies runs on PHP >= 8.4 do not fail on deprecations raised by the oldest
+  Symfony/PSR packages (they predate PHP 8.4); `symfony/polyfill-php83` ^1.31 is required in `require-dev` for the same reason.
+
+### Fixed
+
+- Symfony 6.4: the bundle no longer passes closures to the service configurator (`factory()` only accepts strings and
+  arrays there), so it compiles with every supported Symfony version.
+- Symfony Messenger 6.4: `RecoverableMessageHandlingException` has no retry delay argument there; the delay is now
+  passed only when the installed version supports it (`MessageFailures` degrades to the transport retry strategy).
+- PHP 8.4 with `symfony/var-exporter` 8: the Symfony bundle prepends `doctrine.orm.enable_native_lazy_objects: true`
+  when PHP >= 8.4 and the ORM supports native lazy objects (`DoctrineIntegration::nativeLazyObjectsAvailable()`);
+  see `docs/doctrine.md` and `docs/symfony.md`.
 
 ## [0.1.0] - 2026-11-11
 

@@ -17,7 +17,7 @@ final class HeldLocks
 
     public static function factory(Harness $harness): LockFactory
     {
-        return $harness->privateService('lock.factory', LockFactory::class);
+        return $harness->privateService('test.lock_factory', LockFactory::class);
     }
 
     /**

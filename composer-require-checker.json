@@ -24,6 +24,7 @@
         "Doctrine\\DBAL\\Types\\Exception\\InvalidFormat",
         "Doctrine\\DBAL\\Types\\Exception\\InvalidType",
         "Doctrine\\DBAL\\Types\\Type",
+        "Doctrine\\ORM\\Configuration",
         "Doctrine\\ORM\\EntityManagerInterface",
         "Doctrine\\ORM\\Mapping\\Driver\\SimplifiedXmlDriver",
         "Symfony\\Component\\Clock\\NativeClock",
