@@ -44,7 +44,9 @@ final class UrssafTiersPrestationsBundle extends AbstractBundle
         }
         $doctrine = DoctrineIntegration::doctrineBundleConfiguration();
         if ($persistence['entity_manager'] !== 'default') {
-            $doctrine['orm'] = ['entity_managers' => [$persistence['entity_manager'] => ['mappings' => $doctrine['orm']['mappings']]]];
+            $mappings = $doctrine['orm']['mappings'];
+            unset($doctrine['orm']['mappings']);
+            $doctrine['orm']['entity_managers'] = [$persistence['entity_manager'] => ['mappings' => $mappings]];
         }
         $container->prependExtensionConfig('doctrine', $doctrine);
     }

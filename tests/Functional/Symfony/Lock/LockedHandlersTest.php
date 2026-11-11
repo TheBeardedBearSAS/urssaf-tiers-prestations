@@ -18,6 +18,7 @@ use TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\MessageHandler\SyncTena
 use TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\MessageHandler\SyncTenantPaymentStatusesMessageHandler;
 use TheBeardedBear\UrssafTiersPrestations\Tests\Functional\Symfony\Support\Harness;
 use TheBeardedBear\UrssafTiersPrestations\Tests\Functional\Symfony\Support\HeldLocks;
+use TheBeardedBear\UrssafTiersPrestations\Tests\Functional\Symfony\Support\RetryDelay;
 
 final class LockedHandlersTest extends TestCase
 {
@@ -34,7 +35,7 @@ final class LockedHandlersTest extends TestCase
             $handle($harness);
             static::fail('The handler must ask for a retry.');
         } catch (RecoverableMessageHandlingException $retry) {
-            static::assertSame(30_000, $retry->getRetryDelay());
+            RetryDelay::assertCarries(30_000, $retry);
             static::assertSame(0, $retry->getCode());
             static::assertStringContainsString(\sprintf('lock "%s" is held', $resource), $retry->getMessage());
         }

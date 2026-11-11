@@ -31,11 +31,15 @@ The full description of the API (fields, rules, codes, statuses, official JSON e
 
 ## Requirements
 
-- PHP >= 8.2 with `ext-ctype`, `ext-filter`, `ext-json`, `ext-mbstring`.
-- A PSR-18 HTTP client and PSR-17 factories (for example `symfony/http-client` and `nyholm/psr7`).
+- PHP >= 8.2 (8.2 to 8.5 are tested) with `ext-ctype`, `ext-filter`, `ext-json`, `ext-mbstring`.
+- A PSR-18 HTTP client and PSR-17 factories (`psr/http-factory` >= 1.1, for example with `symfony/http-client` and
+  `nyholm/psr7` >= 1.8.2).
 - Optional: `ext-intl` (better transliteration of customer names; a built-in fallback map is used otherwise),
-  `symfony/*` (6.4 or 7.x) for the bundle, `symfony/lock` to prevent overlapping crons / workers, `doctrine/orm`
-  (>= 3.0) and `doctrine/dbal` (>= 4.0) for the Doctrine bridge. Unsupported versions are declared as `conflict`.
+  `symfony/*` for the bundle, `symfony/lock` to prevent overlapping crons / workers, `doctrine/orm` and `doctrine/dbal`
+  for the Doctrine bridge.
+- Minimum versions of the optional libraries, the first releases that raise no deprecation on PHP 8.4 and 8.5 (older
+  ones are declared as `conflict`): `symfony/{clock,framework-bundle,lock,messenger}` 6.4.3 (6.4 LTS) or 7.4,
+  `symfony/dependency-injection` 6.4.26 or 7.4, `doctrine/orm` 3.5.3, `doctrine/dbal` 4.0, `doctrine/doctrine-bundle` 2.19.
 
 ## Installation
 
@@ -298,8 +302,10 @@ make infection    # mutation testing, 100 % MSI
 make ci           # the full quality gate
 ```
 
-The CI runs the same gates (`.gitlab-ci.yml`: one job per gate, tests on PHP 8.2 / 8.3 / 8.4 with the lowest and highest
-dependencies, PHP 8.5 allowed to fail, manual contract job).
+The CI runs the same gates (GitHub Actions, `.github/workflows/ci.yml`: one job per gate, tests on PHP 8.2 / 8.3 / 8.4
+with the lowest and highest dependencies, PHP 8.5 allowed to fail). The contract job is manual (Actions > CI > Run workflow,
+`contract` checked) and reads the repository secrets `URSSAF_SANDBOX_CLIENT_ID` / `URSSAF_SANDBOX_CLIENT_SECRET` of the
+`urssaf-sandbox` environment.
 
 Quality gates (all blocking): PHPUnit with 100 % coverage, Infection with 100 % MSI, PHPStan at level max, Mago
 (`make mago`), PHP-CS-Fixer (`make cs`, `make cs-fix`), Rector (`make rector`), Deptrac (`make deptrac`), composer

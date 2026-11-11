@@ -1,0 +1,166 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      contract:
+        description: Run the contract tests against the URSSAF sandbox (needs repository secrets)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  COMPOSER_NO_INTERACTION: '1'
+  XDEBUG_MODE: 'off'
+
+jobs:
+  # Quality gates: one job each, same commands as the Makefile targets (`make ci` runs them all locally in Docker).
+  quality:
+    name: ${{ matrix.gate }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        gate: [cs, rector, phpstan, mago, deptrac, composer-checks]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          php-version: '8.2'
+          dependencies: locked
+      - name: php-cs-fixer
+        if: matrix.gate == 'cs'
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff --show-progress=none
+      - name: rector
+        if: matrix.gate == 'rector'
+        run: vendor/bin/rector process --dry-run --no-progress-bar
+      - name: phpstan
+        if: matrix.gate == 'phpstan'
+        run: vendor/bin/phpstan analyse --memory-limit=-1 --no-progress
+      - name: mago
+        if: matrix.gate == 'mago'
+        run: |
+          vendor/bin/mago lint --minimum-fail-level=note
+          vendor/bin/mago analyze --minimum-fail-level=note
+      - name: deptrac
+        if: matrix.gate == 'deptrac'
+        run: vendor/bin/deptrac analyse --no-progress
+      - name: composer checks
+        if: matrix.gate == 'composer-checks'
+        run: |
+          composer validate --strict
+          composer audit
+          composer normalize --dry-run --diff
+          vendor/bin/composer-require-checker check --config-file=composer-require-checker.json composer.json
+          vendor/bin/composer-unused --no-progress --configuration=composer-unused.php
+
+  guard:
+    name: guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Forbidden word
+        run: |
+          if grep -rIil --exclude-dir=vendor --exclude-dir=var --exclude-dir=.git 'extra''bat' . ; then
+            echo "Forbidden word found (see files above)"
+            exit 1
+          fi
+
+  tests:
+    name: tests (PHP ${{ matrix.php }}, ${{ matrix.dependencies }})
+    runs-on: ubuntu-latest
+    # PHP 8.5 is not a supported runtime yet: its jobs may fail without failing the workflow.
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.3', '8.4']
+        dependencies: [lowest, highest]
+        experimental: [false]
+        include:
+          - { php: '8.5', dependencies: lowest, experimental: true }
+          - { php: '8.5', dependencies: highest, experimental: true }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          php-version: ${{ matrix.php }}
+          dependencies: ${{ matrix.dependencies }}
+      - run: vendor/bin/phpunit --testsuite=unit,functional
+
+  # 100 % lines / methods / classes over the whole of src (unit + functional suites).
+  coverage:
+    name: coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          php-version: '8.2'
+          dependencies: locked
+          coverage: pcov
+      - run: >-
+          vendor/bin/phpunit --testsuite=unit,functional --coverage-text --coverage-clover var/coverage/clover.xml
+          --coverage-html var/coverage/html --coverage-xml var/coverage/coverage-xml --log-junit var/coverage/junit.xml
+      - run: php bin/check-coverage var/coverage/clover.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: var/coverage/
+          retention-days: 7
+
+  # Same as `make infection`: Infection runs its own initial test pass (never --skip-initial-tests, which yields a false
+  # 100 %); the timeout comes from infection.json5.
+  infection:
+    name: infection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          php-version: '8.2'
+          dependencies: locked
+          coverage: pcov
+      - run: >-
+          vendor/bin/infection --min-msi=100 --min-covered-msi=100 --threads=max --show-mutations --no-progress
+          --test-framework-options="--testsuite=unit,functional"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: infection
+          path: var/infection/
+          retention-days: 7
+
+  # Manual only: Actions > CI > Run workflow > "contract". Repository secrets URSSAF_SANDBOX_CLIENT_ID and
+  # URSSAF_SANDBOX_CLIENT_SECRET are required; the other sandbox variables are optional repository variables.
+  contract:
+    name: contract (URSSAF sandbox)
+    if: github.event_name == 'workflow_dispatch' && inputs.contract
+    runs-on: ubuntu-latest
+    environment: urssaf-sandbox
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          php-version: '8.2'
+          dependencies: locked
+      - run: vendor/bin/phpunit --testsuite=contract
+        env:
+          URSSAF_SANDBOX_CLIENT_ID: ${{ secrets.URSSAF_SANDBOX_CLIENT_ID }}
+          URSSAF_SANDBOX_CLIENT_SECRET: ${{ secrets.URSSAF_SANDBOX_CLIENT_SECRET }}
+          URSSAF_SANDBOX_BASE_URI: ${{ vars.URSSAF_SANDBOX_BASE_URI }}
+          URSSAF_SANDBOX_CUSTOMER_ID: ${{ vars.URSSAF_SANDBOX_CUSTOMER_ID }}
+          URSSAF_SANDBOX_INTERVENANT: ${{ vars.URSSAF_SANDBOX_INTERVENANT }}
+          URSSAF_SANDBOX_CUSTOMER_BIRTH_DATE: ${{ vars.URSSAF_SANDBOX_CUSTOMER_BIRTH_DATE }}
+          URSSAF_SANDBOX_BILLING_ID: ${{ vars.URSSAF_SANDBOX_BILLING_ID }}

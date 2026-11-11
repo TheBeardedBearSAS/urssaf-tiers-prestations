@@ -24,6 +24,7 @@ use TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\MessageHandler\SyncTena
 use TheBeardedBear\UrssafTiersPrestations\Domain\Exception\InvalidValue;
 use TheBeardedBear\UrssafTiersPrestations\Tests\Functional\Symfony\Support\Harness;
 use TheBeardedBear\UrssafTiersPrestations\Tests\Functional\Symfony\Support\HttpScript;
+use TheBeardedBear\UrssafTiersPrestations\Tests\Functional\Symfony\Support\RetryDelay;
 use TheBeardedBear\UrssafTiersPrestations\Tests\Functional\Symfony\Support\Scenario;
 use Throwable;
 
@@ -42,7 +43,7 @@ final class MessageFailuresTest extends TestCase
             $handler(new SubmitCustomerRegistrationMessage($id->value()));
             static::fail('Expected a recoverable exception.');
         } catch (RecoverableMessageHandlingException $failure) {
-            static::assertSame(7000, $failure->getRetryDelay());
+            RetryDelay::assertCarries(7000, $failure);
             static::assertSame(0, $failure->getCode());
             static::assertInstanceOf(RetryableUrssafFailure::class, $failure->getPrevious());
             static::assertSame($failure->getPrevious()->getMessage(), $failure->getMessage());
@@ -100,7 +101,7 @@ final class MessageFailuresTest extends TestCase
         });
 
         static::assertInstanceOf(RecoverableMessageHandlingException::class, $failure);
-        static::assertSame(3000, $failure->getRetryDelay());
+        RetryDelay::assertCarries(3000, $failure);
     }
 
     public function testThereIsNoRetryDelayForATransportFailure(): void
@@ -114,7 +115,7 @@ final class MessageFailuresTest extends TestCase
         });
 
         static::assertInstanceOf(RecoverableMessageHandlingException::class, $failure);
-        static::assertNull($failure->getRetryDelay());
+        RetryDelay::assertCarries(null, $failure);
         static::assertSame($transport, $failure->getPrevious());
     }
 

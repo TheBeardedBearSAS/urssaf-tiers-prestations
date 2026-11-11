@@ -41,7 +41,7 @@ final readonly class InfrastructureRegistrar
     public function register(array $config): void
     {
         $this->services->set(ServiceIds::PSR_CLOCK, ClockInterface::class)
-            ->factory(PsrClockFactory::create(...))
+            ->factory(PsrClockFactory::class . '::create')
             ->args([new Reference('clock', ContainerInterface::NULL_ON_INVALID_REFERENCE)]);
         $this->services->set(Clock::class, SystemClock::class)->args([new Reference(ServiceIds::PSR_CLOCK)]);
         $this->services->set(IdGenerator::class, RandomUuidGenerator::class)->args([new Definition(SecureRandomBytes::class)]);
