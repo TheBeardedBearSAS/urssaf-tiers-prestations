@@ -24,6 +24,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   token store, database schema of the package tables, dedicated entity manager and lock; exits with 1 when a check fails.
   Host checks implement `Bridge\Symfony\Diagnostic\InstallationCheck` (autoconfigured).
 
+- Monitoring: `Application\Query\GetWorkflowOverviewHandler` counts the records by tenant and state (port
+  `Application\Port\WorkflowStatistics`, implemented for the in-memory and Doctrine persistences; optional
+  `persistence.workflow_statistics` for a custom one), and the `urssaf:status` command prints them (table or JSON).
+
 ### Fixed
 
 - The shipped translations were never loaded by the framework: `AbstractBundle` resolves the bundle path one directory

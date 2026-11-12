@@ -38,6 +38,16 @@ final class InMemoryCustomerRegistrationRepository implements CustomerRegistrati
     private array $registrations = [];
 
     /**
+     * Copies of every stored record (monitoring, tests).
+     *
+     * @return list<CustomerRegistration>
+     */
+    public function all(): array
+    {
+        return $this->selection()->copies();
+    }
+
+    /**
      * @throws InvariantViolation "customer_registration.duplicate_external_reference" or
      *                            "customer_registration.duplicate_urssaf_customer_id"
      */

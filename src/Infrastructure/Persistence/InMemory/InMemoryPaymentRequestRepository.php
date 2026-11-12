@@ -40,6 +40,16 @@ final class InMemoryPaymentRequestRepository implements PaymentRequestRepository
     private array $requests = [];
 
     /**
+     * Copies of every stored record (monitoring, tests).
+     *
+     * @return list<PaymentRequest>
+     */
+    public function all(): array
+    {
+        return $this->selection()->copies();
+    }
+
+    /**
      * @throws InvariantViolation "payment_request.duplicate_invoice_number"
      */
     public function save(PaymentRequest $paymentRequest): void

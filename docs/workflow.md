@@ -177,6 +177,17 @@ recorded. Consequences to design for:
   command and tenant by an optional Symfony Lock, see [symfony.md](symfony.md#locks-against-overlapping-runs). The
   atomic claims remain the last line of defence against a double submission.
 
+## Monitoring
+
+`Application\Query\GetWorkflowOverviewHandler` (and the `urssaf:status` command, `--format=json`) counts the records by
+tenant and state from the local database, without calling URSSAF: one `Application\Dto\TenantOverview` per tenant with
+every `RegistrationState` and `SubmissionState` (0 when there is no record), and `needingAttention()`, the records waiting
+for a manual action (`error` and `invalid_credentials`, registrations and payment requests). Alert on it, and on records
+left in `submitting` (normally reconciled within `stale_submission_after`).
+
+The counts come from the `Application\Port\WorkflowStatistics` port (one `GROUP BY` per table with Doctrine). A custom
+persistence implements it optionally (`persistence.workflow_statistics`).
+
 ## Polling policy
 
 - Pairing (method 020): registrations in `awaiting_pairing`, then `blocked`, then `mandate_expired`, oldest update

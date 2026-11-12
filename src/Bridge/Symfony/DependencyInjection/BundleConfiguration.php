@@ -162,6 +162,7 @@ final class BundleConfiguration
                 ->enumNode('driver')->values([self::DRIVER_IN_MEMORY, self::DRIVER_DOCTRINE, self::DRIVER_CUSTOM])->defaultValue(self::defaultDriver())->end()
                 ->scalarNode('customer_registration_repository')->defaultNull()->end()
                 ->scalarNode('payment_request_repository')->defaultNull()->end()
+                ->scalarNode('workflow_statistics')->defaultNull()->info('Service id of your WorkflowStatistics (driver "custom", optional: without it, GetWorkflowOverviewHandler and urssaf:status are not available).')->end()
                 ->scalarNode('entity_manager')->defaultValue('default')->cannotBeEmpty()
                     ->info('Name of the Doctrine entity manager. Use a DEDICATED entity manager (own connection) for this package: its repositories flush the whole unit of work of the entity manager they use, which would also write pending changes of the host entities sharing it.')
                 ->end()

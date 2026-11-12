@@ -34,6 +34,7 @@ The configuration tree is defined in `Bridge\Symfony\DependencyInjection\BundleC
 | `workflow.max_page_size` | int >= 1 | `1000` | Upper bound of the records loaded by a batch use case. |
 | `workflow.max_submission_attempts` | int >= 1 | `5` | Submission attempts after which a technical failure is no longer requeued (left in `error` for a manual action). |
 | `persistence.driver` | enum `in_memory` \| `doctrine` \| `custom` | `doctrine` if `doctrine/orm` is installed, else `in_memory` | Persistence adapter. |
+| `persistence.workflow_statistics` | string \| null | `null` | Service id of your `WorkflowStatistics` (driver `custom`, optional: without it `GetWorkflowOverviewHandler` and `urssaf:status` are not registered). |
 | `persistence.entity_manager` | string | `default` | Entity manager that gets the mapping (driver `doctrine`). **Use a dedicated entity manager** (see [Doctrine](#doctrine)): the repositories flush the whole unit of work of the entity manager they use. |
 | `persistence.customer_registration_repository` | string \| null | `null` | Service id of your `CustomerRegistrationRepository` (driver `custom`). |
 | `persistence.payment_request_repository` | string \| null | `null` | Service id of your `PaymentRequestRepository` (driver `custom`). |
@@ -96,6 +97,7 @@ each outcome.
 | `urssaf:payment-requests:sync-statuses` | Poll the status of the submitted payment requests (method 070). | optional, default: every tenant with requests to poll |
 | `urssaf:payment-requests:reconcile-stale` | Reconcile the stale `submitting` payment requests: searches them at URSSAF (method 070); found => `submitted`, proven absent => back to `pending` for the next submit run. The command itself never sends a request. | none (all tenants) |
 | `urssaf:requeue-invalid-credentials` | Move the records refused for invalid credentials back to `pending`, once the credentials are fixed. | required |
+| `urssaf:status` | Count the registrations and payment requests by tenant and state (local database only); `--format=json` for monitoring. | optional, default: every tenant with records |
 | `urssaf:check` | Check the installation (see below); `--skip-remote` does not call URSSAF. | optional, default: configured `tenants` |
 
 Exit codes: `0` on success; `1` when an item ended `failed`, `invalid_credentials` or `unconfirmed`, or when a package
