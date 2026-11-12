@@ -55,6 +55,7 @@
         "symfony/clock": "^6.4.3 || ^7.4",
         "symfony/console": "^6.4 || ^7.4",
         "symfony/dependency-injection": "^6.4.26 || ^7.4",
+        "symfony/doctrine-bridge": "^6.4.11 || ^7.4",
         "symfony/error-handler": "^6.4.3 || ^7.4",
         "symfony/event-dispatcher-contracts": "^2.5.3 || ^3.4.2",
         "symfony/framework-bundle": "^6.4.3 || ^7.4",

@@ -53,6 +53,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The domain events of the registration and payment request workflows that have an integration event carry the
   external reference of the record (`externalReference()`); their constructors take it after the tenant id.
 
+- Development floor `symfony/doctrine-bridge` 6.4.11 (the earlier versions raise a deprecation on PHP 8.5).
+
 ### Fixed
 
 - `environment: '%env(URSSAF_ENV)%'` (the documented configuration) broke the container: the environment was converted
