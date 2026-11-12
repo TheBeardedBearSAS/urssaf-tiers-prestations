@@ -278,7 +278,7 @@ All exceptions thrown by the package implement `Domain\Exception\UrssafException
 - Gateway failures: `UrssafRequestRejected` (HTTP 400, business refusal with the URSSAF error codes),
   `UrssafAuthenticationFailed` (401 after retry, 403, 512), `UnexpectedUrssafResponse`.
 
-Violation codes are translated by the Symfony bridge (domain `urssaf_tiers_prestations`, English shipped, see
+Violation codes are translated by the Symfony bridge (domain `urssaf_tiers_prestations`, English and French shipped, see
 [docs/symfony.md](docs/symfony.md#translations)).
 
 ## Security

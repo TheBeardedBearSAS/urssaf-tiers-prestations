@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- French translations of the violation codes (`urssaf_tiers_prestations.fr.yaml`), shipped next to the English ones;
+  the test suite checks that every shipped locale has the same keys as the English file.
+
 ## [0.1.1] - 2026-11-11
 
 ### Changed

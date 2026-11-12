@@ -203,17 +203,18 @@ PHP 8.2 and 8.3 nothing is prepended.
 ## Translations
 
 The violation codes (`<subject>.<reason>`, for example `birth_date.in_future`) are translatable messages of the
-translation domain `urssaf_tiers_prestations`. The bundle ships
-`Resources/translations/urssaf_tiers_prestations.en.yaml`.
+translation domain `urssaf_tiers_prestations`. The bundle ships English and French:
+`Resources/translations/urssaf_tiers_prestations.en.yaml` and `urssaf_tiers_prestations.fr.yaml` (same keys, kept in
+sync by the test suite).
 
-To add French (or any locale): create `translations/urssaf_tiers_prestations.fr.yaml` in your application, with the
-same keys as the English file:
+To add another locale: create `translations/urssaf_tiers_prestations.<locale>.yaml` in your application, with the same
+keys as the English file. To reword a shipped message, define the key in your application's file of that locale:
 
 ```yaml
-"birth_date.in_future": "La date de naissance ne peut pas etre dans le futur."
-"customer_registration.not_found": "Inscription du client introuvable."
+# translations/urssaf_tiers_prestations.fr.yaml
+"customer_registration.not_found": "Ce client n'a pas encore été inscrit."
 ```
 
-Keys defined in your application's `translations/` directory also override the shipped English messages. Translate a
+Keys defined in your application's `translations/` directory override the shipped messages. Translate a
 violation with `$translator->trans($violation->code(), [], 'urssaf_tiers_prestations')` (the message keys are the
 violation codes; `Violation::params()` holds the scalar parameters of the violation).

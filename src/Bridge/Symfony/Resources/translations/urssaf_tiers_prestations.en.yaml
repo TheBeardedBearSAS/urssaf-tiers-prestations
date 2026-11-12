@@ -1,6 +1,6 @@
 # Messages of the violation codes of the package ("<subject>.<reason>"), domain "urssaf_tiers_prestations".
-# Add a translation file for another locale next to this one (urssaf_tiers_prestations.fr.yaml...) or override
-# keys in the translations/ directory of the application.
+# Every shipped locale (urssaf_tiers_prestations.fr.yaml...) has the same keys in the same order; override keys in the
+# translations/ directory of the application.
 
 "account_holder.empty": "Account holder name is required."
 "account_holder.invalid_format": "Account holder name has an invalid format."

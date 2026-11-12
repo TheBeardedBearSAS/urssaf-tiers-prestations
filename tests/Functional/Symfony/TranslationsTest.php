@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TheBeardedBear\UrssafTiersPrestations\Tests\Functional\Symfony;
 
 use PHPUnit\Framework\Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -28,30 +29,51 @@ final class TranslationsTest extends TestCase
         'workflow_policy.invalid_page_size',
     ];
 
-    public function testEveryViolationCodeOfTheDomainHasAnEnglishMessage(): void
+    /** Locales shipped by the bundle. */
+    private const LOCALES = ['en', 'fr'];
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function locales(): iterable
     {
-        $messages = self::messages();
+        foreach (self::LOCALES as $locale) {
+            yield $locale => [$locale];
+        }
+    }
+
+    #[DataProvider('locales')]
+    public function testEveryViolationCodeOfTheDomainHasAMessage(string $locale): void
+    {
+        $messages = self::messages($locale);
 
         $missing = array_values(array_diff(self::codesInSources(), self::NOT_TRANSLATED, array_keys($messages)));
 
         static::assertSame([], $missing, 'Violation codes without a translation.');
     }
 
-    public function testEveryMessageIsAFilledSentence(): void
+    #[DataProvider('locales')]
+    public function testEveryMessageIsAFilledSentence(string $locale): void
     {
-        foreach (self::messages() as $code => $message) {
+        foreach (self::messages($locale) as $code => $message) {
             static::assertMatchesRegularExpression('/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/', $code);
-            static::assertMatchesRegularExpression('/^[A-Z].+\.$/', $message, $code);
+            static::assertMatchesRegularExpression('/^\p{Lu}.+\.$/u', $message, $code);
         }
+    }
+
+    #[DataProvider('locales')]
+    public function testEveryLocaleHasTheKeysOfTheEnglishFileInTheSameOrder(string $locale): void
+    {
+        static::assertSame(array_keys(self::messages('en')), array_keys(self::messages($locale)));
     }
 
     /**
      * @return array<string, string>
      */
-    private static function messages(): array
+    private static function messages(string $locale): array
     {
         // @mago-expect analysis:mixed-assignment YAML is untyped; every entry is checked below.
-        $parsed = Yaml::parseFile(\dirname(__DIR__, 3) . '/src/Bridge/Symfony/Resources/translations/urssaf_tiers_prestations.en.yaml');
+        $parsed = Yaml::parseFile(\dirname(__DIR__, 3) . '/src/Bridge/Symfony/Resources/translations/urssaf_tiers_prestations.' . $locale . '.yaml');
         static::assertIsArray($parsed);
         $messages = [];
         foreach ($parsed as $code => $message) { // @mago-expect analysis:mixed-assignment narrowed by the assertion below.
