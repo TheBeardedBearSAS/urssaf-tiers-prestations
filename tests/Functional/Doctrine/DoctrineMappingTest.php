@@ -49,7 +49,7 @@ final class DoctrineMappingTest extends TestCase
         sort($tables);
 
         static::assertSame(
-            ['urssaf_tps_customer_registrations', 'urssaf_tps_payment_request_progress', 'urssaf_tps_payment_requests'],
+            ['urssaf_tps_customer_registrations', 'urssaf_tps_outbox', 'urssaf_tps_payment_request_progress', 'urssaf_tps_payment_requests'],
             $tables,
         );
         static::assertSame(

@@ -152,7 +152,7 @@ class CustomerRegistration
             );
         }
         $this->status = $this->status->transitionTo(RegistrationState::AwaitingPairing, $now, $urssafCustomerId, null, []);
-        $this->events[] = new CustomerSubmittedToUrssaf($this->id, $this->tenantId, $urssafCustomerId, $now);
+        $this->events[] = new CustomerSubmittedToUrssaf($this->id, $this->tenantId, $this->externalReference, $urssafCustomerId, $now);
     }
 
     /**
@@ -176,7 +176,7 @@ class CustomerRegistration
         if (!$pairingStatus->allowsTransmission()) {
             $this->status = $this->status->transitionTo($target, $now, null, null, null);
             if ($target !== $current) {
-                $this->events[] = new CustomerPairingStatusChanged($this->id, $this->tenantId, $pairingStatus, $current, $target, $now);
+                $this->events[] = new CustomerPairingStatusChanged($this->id, $this->tenantId, $this->externalReference, $pairingStatus, $current, $target, $now);
             }
 
             return;
@@ -190,7 +190,7 @@ class CustomerRegistration
         $changed = $current !== RegistrationState::Registered || !$this->status->hasPairingAcceptedAt($pairingAcceptedAt);
         $this->status = $this->status->transitionTo($target, $now, null, $pairingAcceptedAt, null);
         if ($changed) {
-            $this->events[] = new CustomerPairingValidated($this->id, $this->tenantId, $pairingAcceptedAt, $now);
+            $this->events[] = new CustomerPairingValidated($this->id, $this->tenantId, $this->externalReference, $pairingAcceptedAt, $now);
         }
     }
 
@@ -220,7 +220,7 @@ class CustomerRegistration
     public function markRejected(array $causes, Instant $now): void
     {
         $this->status = $this->status->transitionTo(RegistrationState::Rejected, $now, null, null, $causes);
-        $this->events[] = new CustomerRegistrationRejected($this->id, $this->tenantId, $causes, $now);
+        $this->events[] = new CustomerRegistrationRejected($this->id, $this->tenantId, $this->externalReference, $causes, $now);
     }
 
     /**

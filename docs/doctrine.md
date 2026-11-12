@@ -18,6 +18,7 @@ All tables are prefixed with `urssaf_tps_` (`DoctrineIntegration::TABLE_PREFIX`)
 | `urssaf_tps_customer_registrations` | `Domain\Customer\CustomerRegistration` | Registration: id, tenant, external reference, creation instant, embedded customer (civil status, contact, bank account, address) and embedded status (state, URSSAF customer id, pairing instant, last errors, update instant). |
 | `urssaf_tps_payment_requests` | `Domain\PaymentRequest\PaymentRequest` | Payment request: id, tenant, external reference, submission state, submission errors (JSON), URSSAF tracking (JSON), embedded invoice (customer, billing third party, number, date, employment period, totals, lines as JSON, deposit) and embedded timeline. |
 | `urssaf_tps_payment_request_progress` | `Bridge\Doctrine\Entity\PaymentRequestProgress` | Query-side row, 1:1 with `urssaf_tps_payment_requests` (same id). |
+| `urssaf_tps_outbox` | `Bridge\Doctrine\Entity\OutboxMessage` | Integration events waiting to be relayed (`Bridge\Doctrine\Repository\DoctrineOutbox`, written with DBAL in the transaction of the state change). See [integration-events.md](integration-events.md). |
 
 Unique constraints:
 

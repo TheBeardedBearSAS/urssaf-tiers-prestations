@@ -3,6 +3,14 @@
 Bundle class: `TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\UrssafTiersPrestationsBundle` (alias
 `urssaf_tiers_prestations`), for Symfony 6.4 and 7.x. Register it in `config/bundles.php`.
 
+## Symfony Flex recipe
+
+The recipe lives in `recipe/thebeardedbear/urssaf-tiers-prestations/<version>/` (manifest and copied files);
+`bin/build-flex-endpoint <output-dir> <base-url>` turns it into a private Flex endpoint (`index.json` and one JSON file
+per recipe) to serve at `<base-url>`, which applications declare in `extra.symfony.endpoint` (see the README). A test
+boots the bundle with the copied configuration, so that the recipe follows the configuration tree. Add a new version
+directory when a release changes the recipe (Flex picks the highest version not above the installed package version).
+
 ## Configuration reference
 
 The configuration tree is defined in `Bridge\Symfony\DependencyInjection\BundleConfiguration`.
@@ -21,6 +29,7 @@ The configuration tree is defined in `Bridge\Symfony\DependencyInjection\BundleC
 | `tenants` | list of string | keys of `credentials` | Tenants processed by the commands that cannot discover them. |
 | `token_store.cache_pool` | string | `cache.app` | Cache pool (PSR-6) that stores the access tokens. Recommended: a **dedicated pool** (see below), so that clearing `cache.app` does not drop the tokens and the tokens never share a pool with unrelated data. |
 | `token_store.service` | string \| null | `null` | Service id of a `TokenStore`; takes precedence over the cache pool. |
+| `gateway.simulated` | bool | `false` | Tests only: replaces the URSSAF API with the in-memory `Testing\SimulatedUrssafGateway`, exposed as a public service to script the scenarios (see [testing.md](testing.md)). Refused with `environment: production`. |
 | `rate_limiter.enabled` | bool | `false` | Enforces the URSSAF quotas per tenant, in the current process (`SlidingWindowRateLimiter`). |
 | `workflow.business_timezone` | string | `Europe/Paris` | Time zone used for date-only values (validated against `DateTimeZone::listIdentifiers()`). |
 | `workflow.settled_max_age` | ISO 8601 duration | `P90D` | How long a paid/recovered request is still polled. |
@@ -33,12 +42,26 @@ The configuration tree is defined in `Bridge\Symfony\DependencyInjection\BundleC
 | `workflow.max_page_size` | int >= 1 | `1000` | Upper bound of the records loaded by a batch use case. |
 | `workflow.max_submission_attempts` | int >= 1 | `5` | Submission attempts after which a technical failure is no longer requeued (left in `error` for a manual action). |
 | `persistence.driver` | enum `in_memory` \| `doctrine` \| `custom` | `doctrine` if `doctrine/orm` is installed, else `in_memory` | Persistence adapter. |
+| `persistence.workflow_statistics` | string \| null | `null` | Service id of your `WorkflowStatistics` (driver `custom`, optional: without it `GetWorkflowOverviewHandler` and `urssaf:status` are not registered). |
 | `persistence.entity_manager` | string | `default` | Entity manager that gets the mapping (driver `doctrine`). **Use a dedicated entity manager** (see [Doctrine](#doctrine)): the repositories flush the whole unit of work of the entity manager they use. |
 | `persistence.customer_registration_repository` | string \| null | `null` | Service id of your `CustomerRegistrationRepository` (driver `custom`). |
 | `persistence.payment_request_repository` | string \| null | `null` | Service id of your `PaymentRequestRepository` (driver `custom`). |
 | `lock.enabled` | `auto` \| bool | `auto` | Non-blocking lock per command / handler and tenant (see [Locks](#locks-against-overlapping-runs)). `auto`: enabled when `symfony/lock` is installed and the factory service exists; `true`: required (the container fails to build without the factory service, or without `symfony/lock`); `false`: disabled. |
 | `lock.factory` | string | `lock.factory` | Service id of a `Symfony\Component\Lock\LockFactory`. |
 | `lock.ttl` | float >= 1 | `3600.0` | Seconds after which the lock of a crashed process expires. Set it above the longest run of a command. |
+| `outbox.enabled` | bool | `false` | Writes the integration events in an outbox, in the transaction of each state change (see [integration-events.md](integration-events.md)). |
+| `outbox.service` | string \| null | `null` | Service id of your `Outbox` (required with the `custom` driver). Default: the outbox of the persistence driver. |
+| `outbox.sink` | string | `messenger` | `messenger`, `event_dispatcher`, or the service id of an `IntegrationEventSink`. |
+| `outbox.bus` | string | `messenger.default_bus` | Bus of the `messenger` sink. |
+| `outbox.retention` | ISO 8601 duration | `P30D` | How long a dispatched entry is kept (`urssaf:outbox:purge`). |
+| `scheduler.enabled` | bool | `false` | Registers a Symfony Scheduler schedule that runs the crons of the package (see [Scheduler](#scheduler)). Requires `symfony/scheduler`. |
+| `scheduler.name` | string | `urssaf` | Name of the schedule (transport `scheduler_<name>`). |
+| `scheduler.frequencies.submit_pending` | ISO 8601 duration \| null | `PT5M` | `urssaf:customers:submit-pending` and `urssaf:payment-requests:submit-pending`; null leaves the task out. |
+| `scheduler.frequencies.sync_pairing` | ISO 8601 duration \| null | `PT10M` | `urssaf:customers:sync-pairing`. |
+| `scheduler.frequencies.sync_statuses` | ISO 8601 duration \| null | `PT15M` | `urssaf:payment-requests:sync-statuses`. |
+| `scheduler.frequencies.reconcile_stale` | ISO 8601 duration \| null | `PT15M` | `urssaf:customers:reconcile-stale` and `urssaf:payment-requests:reconcile-stale`. |
+| `scheduler.frequencies.relay_outbox` | ISO 8601 duration \| null | `PT1M` | `urssaf:outbox:relay` (only with the outbox). |
+| `scheduler.frequencies.purge_outbox` | ISO 8601 duration \| null | `P1D` | `urssaf:outbox:purge` (only with the outbox). |
 | `messenger.enabled` | bool | `false` | Registers the Messenger handlers. |
 | `messenger.bus` | string | `messenger.default_bus` | Bus used by the auto-submit listener. |
 | `messenger.auto_submit` | bool | `false` | Dispatches the submit messages when a registration / payment request is created. |
@@ -47,7 +70,10 @@ Validation rules enforced at container build time:
 
 - `credentials` and `credentials_provider` are mutually exclusive, and one of them is required.
 - `messenger.auto_submit` requires `messenger.enabled`.
+- `gateway.simulated` cannot be used with `environment: production`.
+- `outbox.enabled` with the `custom` driver requires `outbox.service`.
 - `lock.enabled: true` requires `symfony/lock`.
+- `scheduler.enabled: true` requires `symfony/scheduler`.
 - `workflow.default_page_size` must not exceed `workflow.max_page_size`.
 - The `custom` driver requires both repository service ids.
 - `business_timezone` must be a known time zone and the durations (`settled_max_age`, `unknown_status_max_age`, `max_polling_age`, `stale_submission_after`) valid ISO 8601 intervals.
@@ -94,6 +120,10 @@ each outcome.
 | `urssaf:payment-requests:sync-statuses` | Poll the status of the submitted payment requests (method 070). | optional, default: every tenant with requests to poll |
 | `urssaf:payment-requests:reconcile-stale` | Reconcile the stale `submitting` payment requests: searches them at URSSAF (method 070); found => `submitted`, proven absent => back to `pending` for the next submit run. The command itself never sends a request. | none (all tenants) |
 | `urssaf:requeue-invalid-credentials` | Move the records refused for invalid credentials back to `pending`, once the credentials are fixed. | required |
+| `urssaf:outbox:relay` | Deliver the pending integration events (exit `1` when a delivery failed). | none |
+| `urssaf:outbox:purge` | Delete the outbox entries dispatched for longer than `outbox.retention`. | none |
+| `urssaf:status` | Count the registrations and payment requests by tenant and state (local database only); `--format=json` for monitoring. | optional, default: every tenant with records |
+| `urssaf:check` | Check the installation (see below); `--skip-remote` does not call URSSAF. | optional, default: configured `tenants` |
 
 Exit codes: `0` on success; `1` when an item ended `failed`, `invalid_credentials` or `unconfirmed`, or when a package
 exception (`UrssafException`) or an invalid option (for example `--limit=0`, a missing `--tenant`, or no tenant to
@@ -101,6 +131,23 @@ process) stops the command. The message is printed as an error.
 
 Outcomes (`Application\Dto\ItemOutcome`): `not_found`, `not_claimed`, `accepted`, `rejected`, `invalid_credentials`,
 `requeued`, `exhausted`, `unconfirmed`, `manual_review`, `changed`, `unchanged`, `unknown_status`, `ignored`, `failed`, `reconciled`.
+
+### Checking the installation
+
+`urssaf:check` prints one line per check and exits with `1` when one of them fails (warnings do not fail): run it after
+each deployment, or in the CI of the application with `--skip-remote`.
+
+| Check | Failure / warning |
+|---|---|
+| `credentials` | failure: no credentials for a tenant in the configured provider |
+| `authentication` | failure: URSSAF refuses the credentials or cannot be reached. A new access token is requested for every tenant (any cached one is ignored), the tokens of the application are not touched. Skipped with `--skip-remote`; replaced by a `gateway` warning when `gateway.simulated` is enabled |
+| `token store` | warning: the tokens are stored in `cache.app` instead of a dedicated pool |
+| `database schema` | failure (driver `doctrine`): the package tables are missing or differ from the mapping; warning: the entity manager is the `default` one |
+| `lock` | warning: the lock is disabled or `symfony/lock` is missing |
+
+Add checks of your own by implementing `Bridge\Symfony\Diagnostic\InstallationCheck` (autoconfigured, tag
+`urssaf_tiers_prestations.installation_check`): they run after the package checks, unless their tag has a positive
+`priority`.
 
 ## Messenger
 
@@ -136,6 +183,33 @@ With `messenger.auto_submit: true`, an `AutoSubmitListener` listens to the domai
 consumer always sees the record. The pairing and status polling are still driven by cron (commands) or by your own
 scheduler dispatching the `SyncTenant*` messages.
 
+## Scheduler
+
+Instead of the crontab, the bundle can register a [Symfony Scheduler](https://symfony.com/doc/current/scheduler.html)
+schedule that runs the same console commands, through Messenger (`Symfony\Component\Console\Messenger\RunCommandMessage`,
+handled by the framework): same locks, same reports, same safety nets.
+
+```bash
+composer require symfony/scheduler
+```
+
+```yaml
+urssaf_tiers_prestations:
+    scheduler:
+        enabled: true
+        frequencies: { submit_pending: PT5M, sync_pairing: PT10M, sync_statuses: PT15M, reconcile_stale: PT15M }
+```
+
+Run one worker for the schedule (and keep it running, like any Messenger worker):
+
+```bash
+php bin/console messenger:consume scheduler_urssaf
+```
+
+A command that exits with a non-zero code makes its message fail (`RunCommandFailedException`), so it shows in the
+worker logs and in the failure transport. Run a single scheduler worker (or enable the lock): two workers of the same
+schedule would run each task twice.
+
 ## Locks against overlapping runs
 
 Two crons that overlap, a cron racing a Messenger worker, or two workers handling the same tenant could poll or submit
@@ -153,6 +227,7 @@ URSSAF quotas are per tenant. When `symfony/lock` is installed, every console co
 | `payment-requests.reconcile-stale` | `urssaf:payment-requests:reconcile-stale` | `*` |
 | `customers.reconcile-stale` | `urssaf:customers:reconcile-stale` | `*` |
 | `requeue-invalid-credentials` | `urssaf:requeue-invalid-credentials` | tenant |
+| `outbox.relay` | `urssaf:outbox:relay` | `*` |
 
 When the lock is already held: a **command** prints that the operation is already running and exits with `0` (the run
 that holds the lock does the work); a **Messenger handler** throws `RecoverableMessageHandlingException` with a 30 s delay,
@@ -200,20 +275,81 @@ proxies rely on; without it the ORM throws "Symfony LazyGhost is not available")
 `doctrine` configuration wins, for instance `enable_native_lazy_objects: false` with `symfony/var-exporter` 6.4 or 7. On
 PHP 8.2 and 8.3 nothing is prepended.
 
+## Validation and forms
+
+The use cases validate their input themselves and throw `ValidationFailed` with every violation at once (code
+`<subject>.<reason>`, path such as `invoice.lines[0].quantity`, scalar params). When `symfony/validator` is installed, the
+bundle registers the public service `Bridge\Symfony\Validation\ViolationListConverter`, which turns them into a Symfony
+`ConstraintViolationList`:
+
+| `ConstraintViolation` | Value |
+|---|---|
+| `getPropertyPath()` | the violation path, with the optional prefix (`customer.birthDate`) |
+| `getCode()`, `getMessageTemplate()` | the violation code (`birth_date.in_future`) |
+| `getMessage()` | the translation of the code in the domain `urssaf_tiers_prestations` (current locale of the `translator`), or the English message without translator |
+| `getParameters()` | the violation params as `%name%` placeholders |
+| `getCause()` | the original `Domain\Validation\Violation` |
+| `getInvalidValue()` | always `null`: the rejected raw values (personal data) are never exposed |
+
+`convert()` keeps the errors only; `convertWithWarnings()` keeps the warnings too.
+
+The drafts (`Domain\Customer\Input\CustomerDraft`, `Domain\PaymentRequest\Input\PaymentRequestDraft` and their nested
+drafts) are plain readonly objects with nullable properties: the Serializer builds them from a request body
+(`#[MapRequestPayload]`, or `$serializer->deserialize($json, PaymentRequestDraft::class, 'json')`). The list of service
+lines needs a PHPDoc type extractor (`symfony/property-info` with `phpstan/phpdoc-parser`, enabled by default in a
+Symfony application). Missing JSON keys become `null` and are reported by the use case as `field.required`.
+
+An API controller:
+
+```php
+#[Route('/customers/{reference}/payment-requests', methods: ['POST'])]
+public function create(
+    string $reference,
+    #[MapRequestPayload] PaymentRequestDraft $draft,
+    CreatePaymentRequestHandler $createPaymentRequest,
+    ViolationListConverter $violations,
+): Response {
+    try {
+        $id = $createPaymentRequest(new CreatePaymentRequest(
+            TenantId::fromString('tenant-1'),
+            CustomerSelector::byExternalReference(ExternalReference::fromString($reference)),
+            $draft,
+        ));
+    } catch (ValidationFailed $failed) {
+        // API Platform / Problem Details style: the list serializes with the "constraint_violation_list" normalizer.
+        throw new ValidationFailedException($draft, $violations->convert($failed));
+    }
+
+    return $this->json(['id' => $id->value()], Response::HTTP_CREATED);
+}
+```
+
+With a form, map each violation on the form (the paths follow the property paths of the draft):
+
+```php
+foreach ($violations->convert($failed) as $violation) {
+    $form->addError(new FormError((string) $violation->getMessage(), $violation->getMessageTemplate(), $violation->getParameters(), null, $violation));
+}
+```
+
+or let the Form component place them on the matching fields with
+`(new ViolationMapper())->mapViolation($violation, $form)` for each violation, the form data being the draft.
+
 ## Translations
 
 The violation codes (`<subject>.<reason>`, for example `birth_date.in_future`) are translatable messages of the
-translation domain `urssaf_tiers_prestations`. The bundle ships
-`Resources/translations/urssaf_tiers_prestations.en.yaml`.
+translation domain `urssaf_tiers_prestations`. The bundle ships English and French:
+`Resources/translations/urssaf_tiers_prestations.en.yaml` and `urssaf_tiers_prestations.fr.yaml` (same keys, kept in
+sync by the test suite).
 
-To add French (or any locale): create `translations/urssaf_tiers_prestations.fr.yaml` in your application, with the
-same keys as the English file:
+To add another locale: create `translations/urssaf_tiers_prestations.<locale>.yaml` in your application, with the same
+keys as the English file. To reword a shipped message, define the key in your application's file of that locale:
 
 ```yaml
-"birth_date.in_future": "La date de naissance ne peut pas etre dans le futur."
-"customer_registration.not_found": "Inscription du client introuvable."
+# translations/urssaf_tiers_prestations.fr.yaml
+"customer_registration.not_found": "Ce client n'a pas encore été inscrit."
 ```
 
-Keys defined in your application's `translations/` directory also override the shipped English messages. Translate a
+Keys defined in your application's `translations/` directory override the shipped messages. Translate a
 violation with `$translator->trans($violation->code(), [], 'urssaf_tiers_prestations')` (the message keys are the
 violation codes; `Violation::params()` holds the scalar parameters of the violation).

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <!-- Outbox of the integration events: written in the transaction of the state change, relayed then purged.
+         Read and written with DBAL only. -->
+    <entity name="TheBeardedBear\UrssafTiersPrestations\Bridge\Doctrine\Entity\OutboxMessage" table="urssaf_tps_outbox" read-only="true">
+        <unique-constraints>
+            <unique-constraint name="uniq_urssaf_tps_outbox_event_id" columns="event_id"/>
+        </unique-constraints>
+        <indexes>
+            <index name="idx_urssaf_tps_outbox_pending" columns="dispatched_at,sequence"/>
+        </indexes>
+        <id name="sequence" type="integer" column="sequence">
+            <generator strategy="IDENTITY"/>
+        </id>
+        <field name="eventId" type="string" column="event_id" length="36"/>
+        <field name="type" type="string" column="type" length="100"/>
+        <field name="version" type="integer" column="version"/>
+        <field name="tenantId" type="string" column="tenant_id" length="64"/>
+        <field name="aggregateId" type="string" column="aggregate_id" length="64"/>
+        <field name="occurredAt" type="string" column="occurred_at" length="32"/>
+        <field name="payload" type="json" column="payload"/>
+        <field name="data" type="text" column="data"/>
+        <field name="dispatchedAt" type="urssaf_tps_instant" column="dispatched_at" nullable="true"/>
+        <field name="attempts" type="integer" column="attempts"/>
+        <field name="lastError" type="text" column="last_error" nullable="true"/>
+    </entity>
+</doctrine-mapping>

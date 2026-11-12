@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use TheBeardedBear\UrssafTiersPrestations\Domain\PaymentRequest\LocalPaymentRequestId;
 use TheBeardedBear\UrssafTiersPrestations\Domain\PaymentRequest\SubmissionError;
 use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\DomainEvent;
+use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\ExternalReference;
 use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\Instant;
 use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\TenantId;
 
@@ -22,6 +23,7 @@ final readonly class PaymentRequestRejectedByUrssaf implements DomainEvent
     public function __construct(
         private LocalPaymentRequestId $paymentRequestId,
         private TenantId $tenantId,
+        private ExternalReference $externalReference,
         private array $errors,
         private Instant $occurredAt,
     ) {}
@@ -34,6 +36,14 @@ final readonly class PaymentRequestRejectedByUrssaf implements DomainEvent
     public function tenantId(): TenantId
     {
         return $this->tenantId;
+    }
+
+    /**
+     * The reference of the record in the host application.
+     */
+    public function externalReference(): ExternalReference
+    {
+        return $this->externalReference;
     }
 
     /**

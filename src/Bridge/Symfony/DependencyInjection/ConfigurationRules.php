@@ -7,10 +7,16 @@ namespace TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\DependencyInjecti
 use DateInterval;
 use DateTimeZone;
 use Symfony\Component\Lock\LockFactory;
+use Symfony\Component\Scheduler\ScheduleProviderInterface;
+use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\Environment;
 use Throwable;
 
 /**
  * Validation predicates of the configuration tree (each one is true when the value is invalid).
+ *
+ * One small predicate per rule of the tree, hence the method count.
+ *
+ * @mago-expect lint:too-many-methods
  */
 final class ConfigurationRules
 {
@@ -34,6 +40,17 @@ final class ConfigurationRules
         $config = $value;
 
         return $config['credentials'] === [] && $config['credentials_provider'] === null;
+    }
+
+    /**
+     * @param array<array-key, mixed> $value
+     */
+    public static function simulatedGatewayInProduction(array $value): bool
+    {
+        /** @var array{environment: string, gateway: array{simulated: bool}} $config */
+        $config = $value;
+
+        return $config['gateway']['simulated'] && $config['environment'] === 'production';
     }
 
     /**
@@ -69,6 +86,37 @@ final class ConfigurationRules
     /**
      * @param array<array-key, mixed> $value
      */
+    public static function schedulerEnabledWithoutComponent(array $value): bool
+    {
+        return self::schedulerRequiredButMissing($value, interface_exists(ScheduleProviderInterface::class));
+    }
+
+    /**
+     * @param array<array-key, mixed> $value
+     */
+    public static function schedulerRequiredButMissing(array $value, bool $componentInstalled): bool
+    {
+        /** @var array{scheduler: array{enabled: bool}} $config */
+        $config = $value;
+
+        return $config['scheduler']['enabled'] && !$componentInstalled;
+    }
+
+    /**
+     * @param array<array-key, mixed> $value
+     */
+    public static function outboxWithoutStorage(array $value): bool
+    {
+        /** @var array{outbox: array{enabled: bool, service: ?string}, persistence: array{driver: string}} $config */
+        $config = $value;
+
+        return $config['outbox']['enabled'] && $config['outbox']['service'] === null
+            && $config['persistence']['driver'] === BundleConfiguration::DRIVER_CUSTOM;
+    }
+
+    /**
+     * @param array<array-key, mixed> $value
+     */
     public static function defaultPageAboveMax(array $value): bool
     {
         /** @var array{default_page_size: int, max_page_size: int, max_submission_attempts: int} $workflow */
@@ -89,9 +137,23 @@ final class ConfigurationRules
             && ($persistence['customer_registration_repository'] === null || $persistence['payment_request_repository'] === null);
     }
 
+    /**
+     * The empty string is the dummy value of an environment variable placeholder while the container is validated:
+     * an empty variable fails at runtime instead (Environment::from()).
+     */
+    public static function isUnknownEnvironment(mixed $environment): bool
+    {
+        return !\in_array($environment, ['', ...array_map(static fn(Environment $case): string => $case->value, Environment::cases())], true);
+    }
+
     public static function isUnknownTimeZone(mixed $zone): bool
     {
         return !\is_string($zone) || !\in_array($zone, DateTimeZone::listIdentifiers(), true);
+    }
+
+    public static function isInvalidOptionalInterval(mixed $value): bool
+    {
+        return $value !== null && self::isInvalidInterval($value);
     }
 
     public static function isInvalidInterval(mixed $value): bool

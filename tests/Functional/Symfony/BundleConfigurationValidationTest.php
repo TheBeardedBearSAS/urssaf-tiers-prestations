@@ -54,6 +54,8 @@ final class BundleConfigurationValidationTest extends TestCase
         yield 'credentials and provider' => [['credentials_provider' => 'my.provider'], 'mutually exclusive'];
         yield 'custom driver without repositories' => [['persistence' => ['driver' => 'custom']], 'requires "customer_registration_repository"'];
         yield 'custom driver with one repository' => [['persistence' => ['driver' => 'custom', 'customer_registration_repository' => 'a']], 'requires "customer_registration_repository"'];
+        yield 'simulated gateway in production' => [['environment' => 'production', 'gateway' => ['simulated' => true]], '"gateway.simulated" is meant for tests'];
+        yield 'invalid scheduler frequency' => [['scheduler' => ['frequencies' => ['sync_pairing' => 'often']]], 'Invalid ISO 8601 duration'];
         yield 'auto submit without messenger' => [['messenger' => ['enabled' => false, 'auto_submit' => true]], 'requires "messenger.enabled"'];
         // @mago-expect lint:no-literal-password Fake credentials of a test configuration.
         yield 'null default page size' => [['workflow' => ['default_page_size' => 0]], 'too small'];

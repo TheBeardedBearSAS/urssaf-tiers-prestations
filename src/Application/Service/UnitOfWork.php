@@ -6,6 +6,7 @@ namespace TheBeardedBear\UrssafTiersPrestations\Application\Service;
 
 use TheBeardedBear\UrssafTiersPrestations\Application\Port\EventPublisher;
 use TheBeardedBear\UrssafTiersPrestations\Application\Port\FailureReporter;
+use TheBeardedBear\UrssafTiersPrestations\Application\Port\Outbox;
 use TheBeardedBear\UrssafTiersPrestations\Application\Port\TransactionManager;
 use Throwable;
 
@@ -16,8 +17,11 @@ use Throwable;
  * Publication is best effort: once the transaction is committed, a failure of the publisher must not make the use
  * case fail (the state is saved, a retry would find nothing to do and the remaining records of a batch would not be
  * processed). It is caught and handed to the {@see FailureReporter} ({@see IgnoredFailures} by default: configure one that logs), and the result
- * of the operation is returned. Hosts that need guaranteed delivery publish from an outbox written in the same
- * transaction (e.g. an EventPublisher that stores the events in the host database).
+ * of the operation is returned.
+ *
+ * Guaranteed delivery: the {@see Outbox} receives the integration events of the recorded domain events inside the
+ * transaction, so that they are durable with the state change ({@see IgnoredOutbox} by default); the outbox relay
+ * delivers them afterwards.
  */
 final readonly class UnitOfWork
 {
@@ -25,6 +29,7 @@ final readonly class UnitOfWork
         private TransactionManager $transactions,
         private EventPublisher $publisher,
         private FailureReporter $failureReporter = new IgnoredFailures(),
+        private Outbox $outbox = new IgnoredOutbox(),
     ) {}
 
     /**
@@ -38,7 +43,12 @@ final readonly class UnitOfWork
     public function run(callable $operation): mixed
     {
         $events = new RecordedEvents();
-        $result = $this->transactions->transactional(static fn() => $operation($events));
+        $result = $this->transactions->transactional(function () use ($operation, $events): mixed {
+            $result = $operation($events);
+            $this->outbox->append(...IntegrationEventTranslator::translate(...$events->all()));
+
+            return $result;
+        });
 
         try {
             $this->publisher->publish(...$events->all());

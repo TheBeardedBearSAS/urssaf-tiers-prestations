@@ -6,6 +6,7 @@ namespace TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\DependencyInjecti
 
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
+use Symfony\Component\Config\Definition\Builder\ScalarNodeDefinition;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 
 /**
@@ -39,11 +40,30 @@ final class BundleConfiguration
                 ->thenInvalid('"lock.enabled: true" requires symfony/lock (composer require symfony/lock).')
             ->end()
             ->validate()
+                ->ifTrue(ConfigurationRules::simulatedGatewayInProduction(...))
+                ->thenInvalid('"gateway.simulated" is meant for tests and cannot be used with "environment: production".')
+            ->end()
+            ->validate()
+                ->ifTrue(ConfigurationRules::outboxWithoutStorage(...))
+                ->thenInvalid('The "custom" persistence driver requires "outbox.service" when the outbox is enabled.')
+            ->end()
+            ->validate()
+                ->ifTrue(ConfigurationRules::schedulerEnabledWithoutComponent(...))
+                ->thenInvalid('"scheduler.enabled" requires symfony/scheduler (composer require symfony/scheduler).')
+            ->end()
+            ->validate()
                 ->ifTrue(ConfigurationRules::autoSubmitWithoutMessenger(...))
                 ->thenInvalid('"messenger.auto_submit" requires "messenger.enabled".')
             ->end()
             ->children()
-                ->enumNode('environment')->isRequired()->values(['sandbox', 'production'])->end()
+                ->scalarNode('environment')
+                    ->isRequired()
+                    ->info('"sandbox" or "production"; usually "%env(URSSAF_ENV)%" (resolved at runtime).')
+                    ->validate()
+                        ->ifTrue(ConfigurationRules::isUnknownEnvironment(...))
+                        ->thenInvalid('Unknown environment %s: use "sandbox" or "production".')
+                    ->end()
+                ->end()
                 ->scalarNode('base_uri')->defaultNull()->info('Overrides the base URI of the selected environment.')->end()
                 ->scalarNode('application_id')->defaultNull()->info('Value of the "recouv.application.id" header.')->end()
                 ->integerNode('token_safety_margin')->min(0)->defaultValue(60)->info('Seconds before expiry from which an access token is renewed.')->end()
@@ -80,6 +100,12 @@ final class BundleConfiguration
                         ->scalarNode('service')->defaultNull()->info('Service id of a TokenStore (takes precedence over the cache pool).')->end()
                     ->end()
                 ->end()
+                ->arrayNode('gateway')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->booleanNode('simulated')->defaultFalse()->info('Tests only: replaces the URSSAF API with the in-memory Testing\\SimulatedUrssafGateway (public service, to script the scenarios).')->end()
+                    ->end()
+                ->end()
                 ->arrayNode('rate_limiter')
                     ->addDefaultsIfNotSet()
                     ->children()
@@ -95,6 +121,8 @@ final class BundleConfiguration
                         ->floatNode('ttl')->min(1)->defaultValue(3600.0)->info('Seconds after which a lock of a crashed process expires.')->end()
                     ->end()
                 ->end()
+                ->append(self::outbox())
+                ->append(self::scheduler())
                 ->append(self::workflow())
                 ->append(self::persistence())
                 ->arrayNode('messenger')
@@ -106,6 +134,57 @@ final class BundleConfiguration
                     ->end()
                 ->end()
             ->end();
+    }
+
+    private static function outbox(): ArrayNodeDefinition
+    {
+        $node = new ArrayNodeDefinition('outbox');
+        $node
+            ->info('Integration events (Contract\\Event) written in the transaction of each state change, then relayed to the host (docs/integration-events.md).')
+            ->addDefaultsIfNotSet()
+            ->children()
+                ->booleanNode('enabled')->defaultFalse()->end()
+                ->scalarNode('service')->defaultNull()->info('Service id of your Outbox (default: the outbox of the persistence driver).')->end()
+                ->scalarNode('sink')->defaultValue('messenger')->cannotBeEmpty()->info('"messenger" (bus below), "event_dispatcher", or the service id of an IntegrationEventSink.')->end()
+                ->scalarNode('bus')->defaultValue('messenger.default_bus')->cannotBeEmpty()->info('Bus of the "messenger" sink.')->end()
+                ->scalarNode('retention')->defaultValue('P30D')->info('How long a dispatched entry is kept (urssaf:outbox:purge).')->validate()->ifTrue(ConfigurationRules::isInvalidInterval(...))->thenInvalid('Invalid ISO 8601 duration %s.')->end()->end()
+            ->end();
+
+        return $node;
+    }
+
+    private static function scheduler(): ArrayNodeDefinition
+    {
+        $node = new ArrayNodeDefinition('scheduler');
+        $node
+            ->info('Symfony Scheduler schedule running the crons of the package (RunCommandMessage): an alternative to the crontab.')
+            ->addDefaultsIfNotSet()
+            ->children()
+                ->booleanNode('enabled')->defaultFalse()->end()
+                ->scalarNode('name')->defaultValue('urssaf')->cannotBeEmpty()->info('Schedule name: consume it with "messenger:consume scheduler_<name>".')->end()
+                ->arrayNode('frequencies')
+                    ->addDefaultsIfNotSet()
+                    ->append(self::frequency('submit_pending', 'PT5M', 'urssaf:customers:submit-pending and urssaf:payment-requests:submit-pending'))
+                    ->append(self::frequency('sync_pairing', 'PT10M', 'urssaf:customers:sync-pairing'))
+                    ->append(self::frequency('sync_statuses', 'PT15M', 'urssaf:payment-requests:sync-statuses'))
+                    ->append(self::frequency('reconcile_stale', 'PT15M', 'urssaf:customers:reconcile-stale and urssaf:payment-requests:reconcile-stale'))
+                    ->append(self::frequency('relay_outbox', 'PT1M', 'urssaf:outbox:relay (only when the outbox is enabled)'))
+                    ->append(self::frequency('purge_outbox', 'P1D', 'urssaf:outbox:purge (only when the outbox is enabled)'))
+                ->end()
+            ->end();
+
+        return $node;
+    }
+
+    private static function frequency(string $task, string $default, string $commands): ScalarNodeDefinition
+    {
+        $node = new ScalarNodeDefinition($task);
+        $node
+            ->defaultValue($default)
+            ->info(\sprintf('ISO 8601 duration between two runs of %s; null to leave the task out.', $commands))
+            ->validate()->ifTrue(ConfigurationRules::isInvalidOptionalInterval(...))->thenInvalid('Invalid ISO 8601 duration %s.')->end();
+
+        return $node;
     }
 
     private static function workflow(): ArrayNodeDefinition
@@ -152,6 +231,7 @@ final class BundleConfiguration
                 ->enumNode('driver')->values([self::DRIVER_IN_MEMORY, self::DRIVER_DOCTRINE, self::DRIVER_CUSTOM])->defaultValue(self::defaultDriver())->end()
                 ->scalarNode('customer_registration_repository')->defaultNull()->end()
                 ->scalarNode('payment_request_repository')->defaultNull()->end()
+                ->scalarNode('workflow_statistics')->defaultNull()->info('Service id of your WorkflowStatistics (driver "custom", optional: without it, GetWorkflowOverviewHandler and urssaf:status are not available).')->end()
                 ->scalarNode('entity_manager')->defaultValue('default')->cannotBeEmpty()
                     ->info('Name of the Doctrine entity manager. Use a DEDICATED entity manager (own connection) for this package: its repositories flush the whole unit of work of the entity manager they use, which would also write pending changes of the host entities sharing it.')
                 ->end()

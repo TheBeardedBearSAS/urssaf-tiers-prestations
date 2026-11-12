@@ -22,12 +22,14 @@ use TheBeardedBear\UrssafTiersPrestations\Application\Port\Urssaf\PaymentRequest
 use TheBeardedBear\UrssafTiersPrestations\Application\Port\Urssaf\PaymentRequestSubmitter;
 use TheBeardedBear\UrssafTiersPrestations\Application\Port\Urssaf\TransmissionStatusReader;
 use TheBeardedBear\UrssafTiersPrestations\Application\Port\Urssaf\UrssafGateway;
+use TheBeardedBear\UrssafTiersPrestations\Infrastructure\TokenStore\InMemoryTokenStore;
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\ApiConfiguration;
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\Environment;
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\Http\JsonApiClient;
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\Http\OAuth2TokenProvider;
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\UrssafHttpGateway;
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\Wire\TransmissionStatusMapper;
+use TheBeardedBear\UrssafTiersPrestations\Testing\SimulatedUrssafGateway;
 
 /**
  * The URSSAF HTTP gateway and everything it needs: PSR-18 client, PSR-17 factories, access tokens, JSON client.
@@ -52,7 +54,8 @@ final readonly class GatewayRegistrar
         // Also provides the PSR-17 request and stream factories, whatever the PSR-18 client in use.
         $this->services->set(ServiceIds::PSR18_CLIENT, Psr18Client::class)->args([new Reference(ServiceIds::SYMFONY_HTTP_CLIENT)]);
         $this->services->set(ServiceIds::API_CONFIGURATION, ApiConfiguration::class)->args([
-            Environment::from($config['environment']),
+            // Resolved at runtime: the environment is usually an "%env(URSSAF_ENV)%" placeholder.
+            (new Definition(Environment::class, [$config['environment']]))->setFactory([Environment::class, 'from']),
             $config['base_uri'],
             $config['application_id'],
             $config['token_safety_margin'],
@@ -63,17 +66,19 @@ final readonly class GatewayRegistrar
         $client = new Reference($config['http_client'] ?? ServiceIds::PSR18_CLIENT);
         $factories = new Reference(ServiceIds::PSR18_CLIENT);
         $logger = new Reference('logger', ContainerInterface::IGNORE_ON_INVALID_REFERENCE);
-        $this->services->set(ServiceIds::TOKEN_PROVIDER, OAuth2TokenProvider::class)
-            ->args([
-                $client,
-                $factories,
-                $factories,
-                new Reference(TokenStore::class),
-                new Reference(Clock::class),
-                new Reference(ServiceIds::API_CONFIGURATION),
-                $logger,
-            ])
-            ->tag(self::LOGGER_TAG, ['channel' => self::LOGGER_CHANNEL]);
+        foreach ([ServiceIds::TOKEN_PROVIDER => new Reference(TokenStore::class), ServiceIds::PROBE_TOKEN_PROVIDER => new Definition(InMemoryTokenStore::class)] as $id => $tokenStore) {
+            $this->services->set($id, OAuth2TokenProvider::class)
+                ->args([
+                    $client,
+                    $factories,
+                    $factories,
+                    $tokenStore,
+                    new Reference(Clock::class),
+                    new Reference(ServiceIds::API_CONFIGURATION),
+                    $logger,
+                ])
+                ->tag(self::LOGGER_TAG, ['channel' => self::LOGGER_CHANNEL]);
+        }
         $this->services->set(ServiceIds::JSON_CLIENT, JsonApiClient::class)
             ->args([
                 $client,
@@ -98,6 +103,14 @@ final readonly class GatewayRegistrar
             ->tag(self::LOGGER_TAG, ['channel' => self::LOGGER_CHANNEL]);
         foreach ([CustomerRegistrar::class, TransmissionStatusReader::class, PaymentRequestSubmitter::class, PaymentRequestFinder::class] as $port) {
             $this->services->alias($port, UrssafGateway::class);
+        }
+        if ($config['gateway']['simulated']) {
+            $this->services->set(UrssafGateway::class, SimulatedUrssafGateway::class)->args([
+                new Reference(Clock::class),
+                new Reference(IdGenerator::class),
+                new Definition(DateTimeZone::class, [$config['workflow']['business_timezone']]),
+            ]);
+            $this->services->alias(SimulatedUrssafGateway::class, UrssafGateway::class)->public();
         }
     }
 }

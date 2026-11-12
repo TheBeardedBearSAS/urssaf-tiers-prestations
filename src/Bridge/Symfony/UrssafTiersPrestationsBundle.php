@@ -11,6 +11,7 @@ use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use TheBeardedBear\UrssafTiersPrestations\Bridge\Doctrine\DoctrineIntegration;
 use TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\DependencyInjection\BundleConfiguration;
 use TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\DependencyInjection\ServiceRegistrar;
+use TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\Diagnostic\InstallationCheck;
 
 /**
  * Symfony integration of the URSSAF "API Tiers de prestations" client (Symfony 6.4 and 7.x).
@@ -23,6 +24,15 @@ final class UrssafTiersPrestationsBundle extends AbstractBundle
     public const PARAMETER_TENANTS = 'urssaf_tiers_prestations.tenants';
 
     protected string $extensionAlias = self::ALIAS;
+
+    /**
+     * The bundle directory ({@see AbstractBundle} assumes a class one level below it), so that the framework finds the
+     * shipped translations in Resources/translations.
+     */
+    public function getPath(): string
+    {
+        return __DIR__;
+    }
 
     public function configure(DefinitionConfigurator $definition): void
     {
@@ -61,6 +71,7 @@ final class UrssafTiersPrestationsBundle extends AbstractBundle
         $tenants = $validated['tenants'] !== [] ? $validated['tenants'] : array_map(strval(...), array_keys($validated['credentials']));
         $configurator->parameters()->set(self::PARAMETER_TENANTS, $tenants);
         (new ServiceRegistrar($configurator->services()))->register($validated);
+        $container->registerForAutoconfiguration(InstallationCheck::class)->addTag(InstallationCheck::TAG);
     }
 
     /**

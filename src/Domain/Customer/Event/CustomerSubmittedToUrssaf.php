@@ -7,6 +7,7 @@ namespace TheBeardedBear\UrssafTiersPrestations\Domain\Customer\Event;
 use DateTimeImmutable;
 use TheBeardedBear\UrssafTiersPrestations\Domain\Customer\RegistrationId;
 use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\DomainEvent;
+use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\ExternalReference;
 use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\Instant;
 use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\TenantId;
 use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\UrssafCustomerId;
@@ -19,6 +20,7 @@ final readonly class CustomerSubmittedToUrssaf implements DomainEvent
     public function __construct(
         private RegistrationId $registrationId,
         private TenantId $tenantId,
+        private ExternalReference $externalReference,
         private UrssafCustomerId $urssafCustomerId,
         private Instant $occurredAt,
     ) {}
@@ -31,6 +33,14 @@ final readonly class CustomerSubmittedToUrssaf implements DomainEvent
     public function tenantId(): TenantId
     {
         return $this->tenantId;
+    }
+
+    /**
+     * The reference of the record in the host application.
+     */
+    public function externalReference(): ExternalReference
+    {
+        return $this->externalReference;
     }
 
     public function urssafCustomerId(): UrssafCustomerId

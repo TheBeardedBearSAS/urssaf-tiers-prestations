@@ -39,6 +39,7 @@
         "php-http/mock-client": "^1.6.1",
         "php-http/promise": "^1.2.2",
         "phpstan/extension-installer": "^1.4",
+        "phpstan/phpdoc-parser": "^2.0",
         "phpstan/phpstan": "^2.0",
         "phpstan/phpstan-deprecation-rules": "^2.0",
         "phpstan/phpstan-doctrine": "^2.1",
@@ -54,6 +55,7 @@
         "symfony/clock": "^6.4.3 || ^7.4",
         "symfony/console": "^6.4 || ^7.4",
         "symfony/dependency-injection": "^6.4.26 || ^7.4",
+        "symfony/doctrine-bridge": "^6.4.11 || ^7.4",
         "symfony/error-handler": "^6.4.3 || ^7.4",
         "symfony/event-dispatcher-contracts": "^2.5.3 || ^3.4.2",
         "symfony/framework-bundle": "^6.4.3 || ^7.4",
@@ -61,10 +63,16 @@
         "symfony/lock": "^6.4.3 || ^7.4",
         "symfony/messenger": "^6.4.3 || ^7.4",
         "symfony/polyfill-php83": "^1.31",
+        "symfony/process": "^6.4.3 || ^7.4",
         "symfony/property-access": "^6.4.3 || ^7.4",
+        "symfony/property-info": "^6.4.3 || ^7.4",
+        "symfony/scheduler": "^6.4.3 || ^7.4",
+        "symfony/serializer": "^6.4.3 || ^7.4",
         "symfony/string": "^6.4.3 || ^7.4",
+        "symfony/translation": "^6.4.3 || ^7.4",
         "symfony/translation-contracts": "^2.5.3 || ^3.4.2",
         "symfony/uid": "^6.4.3 || ^7.4",
+        "symfony/validator": "^6.4.3 || ^7.4",
         "symfony/var-dumper": "^6.4.3 || ^7.4",
         "symfony/var-exporter": "^6.4.3 || ^7.4",
         "symfony/yaml": "^6.4 || ^7.4",
@@ -82,7 +90,8 @@
         "symfony/http-client": "<6.4",
         "symfony/http-kernel": "<6.4",
         "symfony/lock": "<6.4.3",
-        "symfony/messenger": "<6.4.3"
+        "symfony/messenger": "<6.4.3",
+        "symfony/scheduler": "<6.4.3"
     },
     "suggest": {
         "ext-intl": "Better transliteration of customer names (AsciiNameNormalizer); a built-in fallback map is used otherwise",
@@ -97,7 +106,10 @@
         "symfony/http-client": "PSR-18 compatible HTTP client for the API",
         "symfony/http-kernel": "Required by the Symfony bridge (bundle)",
         "symfony/lock": "Prevents overlapping runs of the same command / handler for a tenant (see the \"lock\" bundle option)",
-        "symfony/messenger": "Enables asynchronous message handling"
+        "symfony/messenger": "Enables asynchronous message handling",
+        "symfony/scheduler": "Runs the crons of the package as a Symfony Scheduler schedule (see the \"scheduler\" bundle option)",
+        "symfony/translation": "Translates the violation codes (English and French shipped)",
+        "symfony/validator": "Converts the violations of the package into a ConstraintViolationList (ViolationListConverter)"
     },
     "autoload": {
         "psr-4": {

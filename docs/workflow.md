@@ -154,11 +154,10 @@ recorded. Consequences to design for:
   outside your own transaction, or use the outbox pattern.
 - **Publisher failure.** A listener that throws after the commit must not undo the work: the failure is isolated (the
   handler still returns normally; the data is committed). An event whose listener failed is lost for that listener.
-- **Outbox pattern (recommended for anything that must not be lost).** Do not perform the side effect in the listener:
-  have it insert a row (event type, payload, aggregate id) in an *outbox* table of your own database, in the transaction
-  that is active when the event is published; a worker (cron or Messenger consumer) then reads the outbox, performs the
-  side effect and marks the row as done. With a dedicated entity manager (see [doctrine.md](doctrine.md)), write the
-  outbox through your own connection, not through the package one.
+- **Outbox (recommended for anything that must not be lost).** Do not perform the side effect in a domain event
+  listener: enable the outbox of the package (`outbox.enabled`), which writes public integration events in the
+  transaction of the state change and relays them at least once, in order per record. See
+  [integration-events.md](integration-events.md).
 - **Safety crons.** Whatever the transport, make the workflow converge on its own: `messenger.auto_submit` only
   dispatches a message when the event is published; if the message is lost (broker down, publisher failure, crash between
   commit and publish) the record stays `pending` until something submits it. Keep these crons running even with
@@ -176,6 +175,17 @@ recorded. Consequences to design for:
 - **No overlap.** Overlapping runs (a slow cron racing the next one, a cron racing a Messenger worker) are prevented per
   command and tenant by an optional Symfony Lock, see [symfony.md](symfony.md#locks-against-overlapping-runs). The
   atomic claims remain the last line of defence against a double submission.
+
+## Monitoring
+
+`Application\Query\GetWorkflowOverviewHandler` (and the `urssaf:status` command, `--format=json`) counts the records by
+tenant and state from the local database, without calling URSSAF: one `Application\Dto\TenantOverview` per tenant with
+every `RegistrationState` and `SubmissionState` (0 when there is no record), and `needingAttention()`, the records waiting
+for a manual action (`error` and `invalid_credentials`, registrations and payment requests). Alert on it, and on records
+left in `submitting` (normally reconciled within `stale_submission_after`).
+
+The counts come from the `Application\Port\WorkflowStatistics` port (one `GROUP BY` per table with Doctrine). A custom
+persistence implements it optionally (`persistence.workflow_statistics`).
 
 ## Polling policy
 

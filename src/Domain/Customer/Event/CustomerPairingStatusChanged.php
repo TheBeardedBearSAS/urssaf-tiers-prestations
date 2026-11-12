@@ -9,6 +9,7 @@ use TheBeardedBear\UrssafTiersPrestations\Domain\Customer\PairingStatus;
 use TheBeardedBear\UrssafTiersPrestations\Domain\Customer\RegistrationId;
 use TheBeardedBear\UrssafTiersPrestations\Domain\Customer\RegistrationState;
 use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\DomainEvent;
+use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\ExternalReference;
 use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\Instant;
 use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\TenantId;
 
@@ -21,6 +22,7 @@ final readonly class CustomerPairingStatusChanged implements DomainEvent
     public function __construct(
         private RegistrationId $registrationId,
         private TenantId $tenantId,
+        private ExternalReference $externalReference,
         private PairingStatus $pairingStatus,
         private RegistrationState $previousState,
         private RegistrationState $newState,
@@ -35,6 +37,14 @@ final readonly class CustomerPairingStatusChanged implements DomainEvent
     public function tenantId(): TenantId
     {
         return $this->tenantId;
+    }
+
+    /**
+     * The reference of the record in the host application.
+     */
+    public function externalReference(): ExternalReference
+    {
+        return $this->externalReference;
     }
 
     public function pairingStatus(): PairingStatus

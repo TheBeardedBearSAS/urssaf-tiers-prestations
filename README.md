@@ -28,6 +28,10 @@ The full description of the API (fields, rules, codes, statuses, official JSON e
 - Doctrine ORM persistence (XML mapping shipped with the package, custom DBAL types, atomic claims), with GDPR tools
   (anonymisation, deletion, encryptable columns).
 - Optional Symfony Lock per command / handler and tenant against overlapping runs.
+- Integration events (`Contract\Event\*`) written to an outbox in the transaction of each state change and relayed at
+  least once, in order per record, to Messenger, the event dispatcher or a sink of your own.
+- A simulated URSSAF platform (`Testing\SimulatedUrssafGateway`, `gateway.simulated: true`) to test a host application
+  end to end without network.
 
 ## Requirements
 
@@ -43,13 +47,20 @@ The full description of the API (fields, rules, codes, statuses, official JSON e
 
 ## Installation
 
-The package is distributed from a private Git repository. Declare it in your `composer.json`:
+The package is distributed from a private Git repository, its Symfony Flex recipe from a private Flex endpoint (the
+files built by `bin/build-flex-endpoint`, artifact `flex-endpoint` of the CI, served over HTTPS). Declare both in your
+`composer.json`:
 
 ```json
 {
     "repositories": [
         {"type": "vcs", "url": "git@<your-git-host>:<group>/urssaf-tiers-prestations.git"}
-    ]
+    ],
+    "extra": {
+        "symfony": {
+            "endpoint": ["https://<flex-endpoint-host>/urssaf/index.json", "flex://defaults"]
+        }
+    }
 }
 ```
 
@@ -57,6 +68,14 @@ then:
 
 ```bash
 composer require thebeardedbear/urssaf-tiers-prestations
+```
+
+The recipe registers the bundle, copies a commented `config/packages/urssaf_tiers_prestations.yaml` (the simulated
+URSSAF platform in the `test` environment) and adds `URSSAF_ENV`, `URSSAF_CLIENT_ID` and `URSSAF_CLIENT_SECRET` to `.env`.
+Without the endpoint, do these steps by hand (Quick start B below). Then check the installation:
+
+```bash
+php bin/console urssaf:check
 ```
 
 ## Architecture
@@ -95,83 +114,42 @@ Hexagonal / DDD, layers enforced by Deptrac:
 
 ## Quick start A: framework-agnostic
 
-Wire the gateway, the repositories and the handlers by hand. The example uses the in-memory adapters (good for tests
-and prototypes); replace the repositories with the Doctrine ones (see [docs/doctrine.md](docs/doctrine.md)) for real use.
+`Standalone\UrssafTiersPrestationsBuilder` wires the gateway, the persistence and every use case:
 
 ```php
 use Nyholm\Psr7\Factory\Psr17Factory;
 use TheBeardedBear\UrssafTiersPrestations\Application\Command\RegisterCustomer;
-use TheBeardedBear\UrssafTiersPrestations\Application\Command\RegisterCustomerHandler;
 use TheBeardedBear\UrssafTiersPrestations\Application\Command\SubmitCustomerRegistration;
-use TheBeardedBear\UrssafTiersPrestations\Application\Command\SubmitCustomerRegistrationHandler;
-use TheBeardedBear\UrssafTiersPrestations\Application\Command\SyncAllCustomerPairingsHandler;
-use TheBeardedBear\UrssafTiersPrestations\Application\Command\SyncCustomerPairingHandler;
-use TheBeardedBear\UrssafTiersPrestations\Application\Policy\WorkflowPolicy;
 use TheBeardedBear\UrssafTiersPrestations\Application\Port\Credentials;
-use TheBeardedBear\UrssafTiersPrestations\Application\Service\UnitOfWork;
 use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\ExternalReference;
 use TheBeardedBear\UrssafTiersPrestations\Domain\Shared\TenantId;
-use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Clock\SystemClock;
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Credentials\InMemoryCredentialsProvider;
-use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Event\NullEventPublisher;
-use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Id\RandomUuidGenerator;
-use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Id\SecureRandomBytes;
-use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Persistence\InMemory\InMemoryCustomerRegistrationRepository;
-use TheBeardedBear\UrssafTiersPrestations\Infrastructure\TokenStore\InMemoryTokenStore;
-use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Transaction\ImmediateTransactionManager;
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\ApiConfiguration;
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\Environment;
-use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\GatewayOptions;
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\HttpTransport;
-use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\UrssafGatewayFactory;
+use TheBeardedBear\UrssafTiersPrestations\Standalone\UrssafTiersPrestationsBuilder;
 
-$tenant = TenantId::fromString('tenant-1');
-
-// Any PSR-18 client / PSR-17 factories, and any PSR-20 clock ($psrClock).
-$http = new Psr18ClientOfYourChoice();
 $factory = new Psr17Factory();
-$clock = new SystemClock($psrClock);
-
-$credentials = new InMemoryCredentialsProvider([
-    'tenant-1' => Credentials::of(getenv('URSSAF_CLIENT_ID'), getenv('URSSAF_CLIENT_SECRET')),
-]);
-
-// The public entry point to build the gateway: the OAuth2 token provider and the JSON client are internal.
-// Use a token store shared by all your processes (PSR-6 / PSR-16 store, dedicated cache pool) in production.
-$gateway = UrssafGatewayFactory::create(
-    new HttpTransport($http, $factory, $factory),
-    $credentials,
-    new InMemoryTokenStore(),
+$urssaf = UrssafTiersPrestationsBuilder::create(
+    new HttpTransport($psr18Client, $factory, $factory),   // any PSR-18 client and PSR-17 factories
+    new InMemoryCredentialsProvider(['tenant-1' => Credentials::of(getenv('URSSAF_CLIENT_ID'), getenv('URSSAF_CLIENT_SECRET'))]),
     new ApiConfiguration(Environment::Sandbox, null, 'my-application'),
-    new GatewayOptions(clock: $clock),   // optional: rate limiter, id generator, clock, PSR-3 logger
-);
-
-$registrations = new InMemoryCustomerRegistrationRepository();
-$unitOfWork = new UnitOfWork(new ImmediateTransactionManager(), new NullEventPublisher());
-$policy = new WorkflowPolicy();
+)
+    ->withDoctrine($urssafEntityManager)    // default: in-memory repositories (tests, prototypes)
+    ->withTokenStore($sharedTokenStore)     // default: in-memory (a token per process)
+    ->build();
 
 // 1. Record the registration locally (validated, nothing is sent yet). $draft is a Domain\Customer\Input\CustomerDraft.
-$registrationId = (new RegisterCustomerHandler(
-    $registrations,
-    new RandomUuidGenerator(new SecureRandomBytes()),
-    $clock,
-    $unitOfWork,
-))(new RegisterCustomer($tenant, ExternalReference::fromString('customer-42'), $draft));
-
-// 2. Send it to URSSAF (method 010): the registration moves to "awaiting_pairing".
-$outcome = (new SubmitCustomerRegistrationHandler($registrations, $gateway, $clock, $unitOfWork))(
-    new SubmitCustomerRegistration($registrationId),
-);
-
-// 3. Later (cron): poll the pairing status (method 020). Once the customer accepted, the state is "registered".
-$sync = new SyncCustomerPairingHandler($registrations, $gateway, $clock, $unitOfWork, $policy);
+$registrationId = $urssaf->registerCustomer()(new RegisterCustomer(TenantId::fromString('tenant-1'), ExternalReference::fromString('customer-42'), $draft));
+// 2. Send it to URSSAF (method 010); then poll the pairing (cron) with $urssaf->syncCustomerPairing().
+$urssaf->submitCustomerRegistration()(new SubmitCustomerRegistration($registrationId));
 ```
 
-Payment requests follow the same pattern: `CreatePaymentRequestHandler` (local validation and storage), then
-`SubmitPaymentRequestsHandler` / `SubmitPendingPaymentRequestsHandler` (method 050, at most 10 per call), then
-`SyncPaymentRequestStatusesHandler` / `SyncAllPaymentRequestStatusesHandler` (method 070) and
-`ReconcileStaleSubmissionsHandler`. Every handler is a `final readonly` class invoked with its command object and
-returns an id or a `BatchReport`. Queries: `GetCustomerRegistrationHandler`, `FindPaymentRequestsHandler`.
+Payment requests follow the same pattern: `createPaymentRequest()` (local validation and storage), then
+`submitPendingPaymentRequests()` (method 050, at most 10 per call), `syncPaymentRequestStatuses()` (method 070) and
+`reconcileStaleSubmissions()`; queries: `getCustomerRegistration()`, `findPaymentRequests()`, `getWorkflowOverview()`.
+Every option of the builder (clock, logger, rate limiter, events, outbox, policy) and the manual wiring are described in
+[docs/standalone.md](docs/standalone.md).
 
 ## Quick start B: Symfony
 
@@ -208,7 +186,8 @@ urssaf_tiers_prestations:
 ```
 
 Every option is described in [docs/symfony.md](docs/symfony.md). Create the tables with
-`doctrine:migrations:diff` (the package ships no migration, see [docs/doctrine.md](docs/doctrine.md)).
+`doctrine:migrations:diff` (the package ships no migration, see [docs/doctrine.md](docs/doctrine.md)), then check the
+installation with `php bin/console urssaf:check` (credentials, authentication, token store, schema, lock).
 
 Messenger: the four messages are handled automatically; route them to your transport:
 
@@ -222,7 +201,8 @@ framework:
             'TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\Message\SyncTenantPaymentStatusesMessage': async
 ```
 
-Cron (polling and recovery run from the console):
+Cron (polling and recovery run from the console), or the equivalent Symfony Scheduler schedule
+(`scheduler: { enabled: true }`, see [docs/symfony.md](docs/symfony.md#scheduler)):
 
 ```cron
 # pairing of the customers awaiting it (also blocked / mandate_expired ones)
@@ -278,7 +258,7 @@ All exceptions thrown by the package implement `Domain\Exception\UrssafException
 - Gateway failures: `UrssafRequestRejected` (HTTP 400, business refusal with the URSSAF error codes),
   `UrssafAuthenticationFailed` (401 after retry, 403, 512), `UnexpectedUrssafResponse`.
 
-Violation codes are translated by the Symfony bridge (domain `urssaf_tiers_prestations`, English shipped, see
+Violation codes are translated by the Symfony bridge (domain `urssaf_tiers_prestations`, English and French shipped, see
 [docs/symfony.md](docs/symfony.md#translations)).
 
 ## Security
@@ -333,6 +313,9 @@ package implements (currently `1.30.19`). See [CHANGELOG.md](CHANGELOG.md).
 - [docs/symfony.md](docs/symfony.md) - bundle configuration, commands, Messenger
 - [docs/doctrine.md](docs/doctrine.md) - persistence
 - [docs/workflow.md](docs/workflow.md) - state machines and rules
+- [docs/integration-events.md](docs/integration-events.md) - reacting to the workflow (outbox, integration events)
+- [docs/standalone.md](docs/standalone.md) - using the package without the Symfony bundle
+- [docs/testing.md](docs/testing.md) - testing a host application with the simulated URSSAF platform
 - [docs/migrating-from-legacy-integration.md](docs/migrating-from-legacy-integration.md) - migrating an in-house integration
 
 ## License

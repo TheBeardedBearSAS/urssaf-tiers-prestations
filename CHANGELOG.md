@@ -7,6 +7,63 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- French translations of the violation codes (`urssaf_tiers_prestations.fr.yaml`), shipped next to the English ones;
+  the test suite checks that every shipped locale has the same keys as the English file.
+- `Bridge\Symfony\Validation\ViolationListConverter` (public service when `symfony/validator` is installed): converts a
+  `ValidationResult` or a `ValidationFailed` into a Symfony `ConstraintViolationList` (path, code, translated message,
+  `%name%` parameters, original violation as cause), for forms and API error responses. See
+  [docs/symfony.md](docs/symfony.md#validation-and-forms).
+
+- `Testing\SimulatedUrssafGateway`: an in-memory URSSAF platform implementing the gateway port (registrations,
+  pairing statuses, submissions, searches per tenant, scriptable sequences, refusals and failures), and the bundle option
+  `gateway.simulated` (refused in production) that wires it as a public service. See [docs/testing.md](docs/testing.md).
+
+- `urssaf:check` console command: credentials, OAuth2 authentication of every tenant (`--skip-remote` to skip it),
+  token store, database schema of the package tables, dedicated entity manager and lock; exits with 1 when a check fails.
+  Host checks implement `Bridge\Symfony\Diagnostic\InstallationCheck` (autoconfigured).
+
+- Monitoring: `Application\Query\GetWorkflowOverviewHandler` counts the records by tenant and state (port
+  `Application\Port\WorkflowStatistics`, implemented for the in-memory and Doctrine persistences; optional
+  `persistence.workflow_statistics` for a custom one), and the `urssaf:status` command prints them (table or JSON).
+
+- Symfony Scheduler: with `scheduler.enabled`, the bundle registers a schedule (`scheduler.name`, default `urssaf`) that
+  runs the crons of the package as `RunCommandMessage`s at configurable frequencies (`scheduler.frequencies.*`, ISO 8601
+  durations), an alternative to the crontab.
+
+- Integration events and outbox: public scalar events (`Contract\Event\*`: registration submitted / rejected, pairing
+  changed, payment request submitted / rejected / status changed) with a stable `eventId`, written by the `UnitOfWork`
+  to an `Application\Port\Outbox` inside the transaction (`IgnoredOutbox` by default; `InMemoryOutbox`, `DoctrineOutbox`
+  on the new table `urssaf_tps_outbox`), delivered at least once and in order per record by `RelayOutboxHandler` to an
+  `IntegrationEventSink` (Messenger, PSR-14 or your own), purged by `PurgeOutboxHandler`. Bundle: `outbox.*` options,
+  `urssaf:outbox:relay` / `urssaf:outbox:purge`, scheduler tasks `relay_outbox` / `purge_outbox`. See
+  [docs/integration-events.md](docs/integration-events.md).
+
+- `Standalone\UrssafTiersPrestationsBuilder`: wires every use case without a framework (in-memory defaults,
+  `withDoctrine()`, token store, clock, logger, rate limiter, events, outbox, policy, gateway) and builds
+  `Standalone\UrssafTiersPrestations`, which returns the handlers. See [docs/standalone.md](docs/standalone.md).
+
+- Symfony Flex recipe (`recipe/`): registers the bundle, copies a commented configuration (simulated gateway in the
+  `test` environment) and adds the `URSSAF_*` variables to `.env`; `bin/build-flex-endpoint` builds the private Flex
+  endpoint (CI artifact `flex-endpoint`).
+
+### Changed
+
+- The domain events of the registration and payment request workflows that have an integration event carry the
+  external reference of the record (`externalReference()`); their constructors take it after the tenant id.
+
+- Development floor `symfony/doctrine-bridge` 6.4.11 (the earlier versions raise a deprecation on PHP 8.5).
+
+### Fixed
+
+- `environment: '%env(URSSAF_ENV)%'` (the documented configuration) broke the container: the environment was converted
+  to the enum at build time. It is now resolved at runtime, and the configuration accepts the placeholder.
+- The bundle required `symfony/clock` without declaring it: without a `clock` service it now falls back to the UTC
+  system clock of the package.
+- The shipped translations were never loaded by the framework: `AbstractBundle` resolves the bundle path one directory
+  above the bundle class, so `Resources/translations` was not found. The bundle now declares its own path.
+
 ## [0.1.1] - 2026-11-11
 
 ### Changed
