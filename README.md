@@ -7,6 +7,13 @@ that is not covered by the tax credit and pays the provider.
 
 Package: `thebeardedbear/urssaf-tiers-prestations` - namespace `TheBeardedBear\UrssafTiersPrestations\`.
 
+> [!IMPORTANT]
+> **Unofficial package.** This project is an independent open-source implementation of a public API. It is not
+> developed, endorsed, certified or supported by URSSAF, and it is not affiliated with URSSAF in any way. "URSSAF" is
+> used only to name the API this package talks to. Using this package does not replace the URSSAF habilitation
+> process; the URSSAF documentation remains the authority on the API, and you remain responsible for the declarations
+> your application sends.
+
 The full description of the API (fields, rules, codes, statuses, official JSON examples) is in
 [docs/api-reference.md](docs/api-reference.md).
 
@@ -318,6 +325,14 @@ package implements (currently `1.30.19`). See [CHANGELOG.md](CHANGELOG.md).
 - [docs/testing.md](docs/testing.md) - testing a host application with the simulated URSSAF platform
 - [docs/migrating-from-legacy-integration.md](docs/migrating-from-legacy-integration.md) - migrating an in-house integration
 
+## Contributing and security
+
+Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). Report vulnerabilities privately as described in
+[SECURITY.md](SECURITY.md), never in a public issue.
+
 ## License
 
-Proprietary, all rights reserved. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). The software is provided "as is", without warranty of any kind.
+
+The API specification summarised in [docs/api-reference.md](docs/api-reference.md) belongs to URSSAF; see the sources
+listed there.

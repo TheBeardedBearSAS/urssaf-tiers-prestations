@@ -1,8 +1,30 @@
 {
     "name": "thebeardedbear/urssaf-tiers-prestations",
     "description": "Client, domain model and Symfony/Doctrine integration for the URSSAF \"API Tiers de prestations\" (immediate tax credit advance)",
-    "license": "proprietary",
+    "license": "MIT",
     "type": "symfony-bundle",
+    "keywords": [
+        "urssaf",
+        "api",
+        "tiers-de-prestation",
+        "avance-immediate",
+        "credit-impot",
+        "services-a-la-personne",
+        "symfony-bundle",
+        "doctrine"
+    ],
+    "authors": [
+        {
+            "name": "TheBeardedBear",
+            "homepage": "https://github.com/TheBeardedBearSAS"
+        }
+    ],
+    "homepage": "https://github.com/TheBeardedBearSAS/urssaf-tiers-prestations",
+    "support": {
+        "issues": "https://github.com/TheBeardedBearSAS/urssaf-tiers-prestations/issues",
+        "source": "https://github.com/TheBeardedBearSAS/urssaf-tiers-prestations",
+        "security": "https://github.com/TheBeardedBearSAS/urssaf-tiers-prestations/security/policy"
+    },
     "require": {
         "php": ">=8.2",
         "ext-ctype": "*",

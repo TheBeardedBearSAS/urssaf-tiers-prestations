@@ -12,6 +12,11 @@ The package constant `SpecVersion::CURRENT` must equal `1.30.19`. Field names, c
 below are reproduced verbatim from the specification (they are French by design); everything else in
 the package is English.
 
+> **Source and rights.** The specification, the field names, the codes and the official JSON examples quoted here come
+> from the URSSAF documents listed above and remain URSSAF's property. They are reproduced only so the package can
+> interoperate with the API, and they are not covered by this package's MIT license. In case of discrepancy, the
+> official URSSAF documentation prevails. This package is not affiliated with URSSAF.
+
 ---
 
 ## 1. General
