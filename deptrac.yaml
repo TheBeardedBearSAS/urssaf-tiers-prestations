@@ -8,6 +8,10 @@ deptrac:
       collectors:
         - type: directory
           value: src/Domain/.*
+    - name: Contract
+      collectors:
+        - type: directory
+          value: src/Contract/.*
     - name: Application
       collectors:
         - type: directory
@@ -42,24 +46,30 @@ deptrac:
           value: ^Doctrine\\
   ruleset:
     Domain: ~
+    Contract: ~
     Application:
       - Domain
+      - Contract
     Infrastructure:
       - Application
       - Domain
+      - Contract
       - Psr
     DoctrineBridge:
       - Domain
+      - Contract
       - Application
       - Infrastructure
       - Doctrine
       - Psr
     Testing:
       - Domain
+      - Contract
       - Application
       - Infrastructure
     SymfonyBridge:
       - Domain
+      - Contract
       - Application
       - Infrastructure
       - Testing

@@ -126,6 +126,7 @@ final class DoctrineWiringTest extends TestCase
         sort($proxies);
         static::assertSame(
             [
+                '__CG__TheBeardedBearUrssafTiersPrestationsBridgeDoctrineEntityOutboxMessage.php',
                 '__CG__TheBeardedBearUrssafTiersPrestationsBridgeDoctrineEntityPaymentRequestProgress.php',
                 '__CG__TheBeardedBearUrssafTiersPrestationsDomainCustomerCustomerRegistration.php',
                 '__CG__TheBeardedBearUrssafTiersPrestationsDomainPaymentRequestPaymentRequest.php',

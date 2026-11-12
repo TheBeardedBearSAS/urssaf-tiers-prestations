@@ -27,6 +27,7 @@ use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Persistence\InMemory\In
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Persistence\InMemory\InMemoryWorkflowStatistics;
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\TokenStore\InMemoryTokenStore;
 use TheBeardedBear\UrssafTiersPrestations\Tests\Functional\Symfony\Support\ExtensionConfigSnapshot;
+use TheBeardedBear\UrssafTiersPrestations\Tests\Unit\Application\Fake\RecordingIntegrationEventSink;
 use TheBeardedBear\UrssafTiersPrestations\Tests\Unit\Infrastructure\Urssaf\Fake\CapturingLogger;
 
 /**
@@ -177,6 +178,7 @@ final class TestKernel extends BaseKernel
         $services->set('test.http_client', MockClient::class)->public();
         $services->set('test.customers', InMemoryCustomerRegistrationRepository::class)->public();
         $services->set('test.payment_requests', InMemoryPaymentRequestRepository::class)->public();
+        $services->set('test.sink', RecordingIntegrationEventSink::class)->args([['refused-aggregate']])->public();
         $services->set('test.statistics', InMemoryWorkflowStatistics::class)->args([new Reference('test.customers'), new Reference('test.payment_requests')])->public();
         $services->set('test.token_store', InMemoryTokenStore::class)->public();
         $services->set('test.credentials', InMemoryCredentialsProvider::class)->args([[]])->public();

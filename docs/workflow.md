@@ -154,11 +154,10 @@ recorded. Consequences to design for:
   outside your own transaction, or use the outbox pattern.
 - **Publisher failure.** A listener that throws after the commit must not undo the work: the failure is isolated (the
   handler still returns normally; the data is committed). An event whose listener failed is lost for that listener.
-- **Outbox pattern (recommended for anything that must not be lost).** Do not perform the side effect in the listener:
-  have it insert a row (event type, payload, aggregate id) in an *outbox* table of your own database, in the transaction
-  that is active when the event is published; a worker (cron or Messenger consumer) then reads the outbox, performs the
-  side effect and marks the row as done. With a dedicated entity manager (see [doctrine.md](doctrine.md)), write the
-  outbox through your own connection, not through the package one.
+- **Outbox (recommended for anything that must not be lost).** Do not perform the side effect in a domain event
+  listener: enable the outbox of the package (`outbox.enabled`), which writes public integration events in the
+  transaction of the state change and relays them at least once, in order per record. See
+  [integration-events.md](integration-events.md).
 - **Safety crons.** Whatever the transport, make the workflow converge on its own: `messenger.auto_submit` only
   dispatches a message when the event is published; if the message is lost (broker down, publisher failure, crash between
   commit and publish) the record stays `pending` until something submits it. Keep these crons running even with

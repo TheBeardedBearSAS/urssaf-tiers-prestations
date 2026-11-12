@@ -34,6 +34,7 @@ use TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\Validation\ViolationLis
  *     rate_limiter: array{enabled: bool},
  *     lock: array{enabled: bool|string, factory: string, ttl: float},
  *     scheduler: array{enabled: bool, name: string, frequencies: array<string, ?string>},
+ *     outbox: array{enabled: bool, service: ?string, sink: string, bus: string, retention: string},
  *     workflow: array{business_timezone: string, settled_max_age: string, stale_submission_after: string, billing_third_party_id: string, batch_size: int, default_page_size: int, max_page_size: int, max_submission_attempts: int, unknown_status_max_age: string, max_polling_age: string},
  *     persistence: array{driver: string, customer_registration_repository: ?string, payment_request_repository: ?string, workflow_statistics: ?string, entity_manager: string},
  *     messenger: array{enabled: bool, bus: string, auto_submit: bool}
@@ -63,9 +64,15 @@ final readonly class ServiceRegistrar
         if ($config['messenger']['enabled']) {
             $entryPoints->registerMessenger($config['messenger']);
         }
+        if ($config['outbox']['enabled']) {
+            (new OutboxRegistrar($this->services))->register($config);
+        }
         if ($config['scheduler']['enabled']) {
             $this->services->set(UrssafScheduleProvider::class)
-                ->args([$config['scheduler']['frequencies']])
+                ->args([$config['outbox']['enabled']
+                    ? $config['scheduler']['frequencies']
+                    // Without the outbox, its commands do not exist.
+                    : [...$config['scheduler']['frequencies'], 'relay_outbox' => null, 'purge_outbox' => null]])
                 ->tag('scheduler.schedule_provider', ['name' => $config['scheduler']['name']]);
         }
         if (class_exists(ConstraintViolationList::class)) {
@@ -74,4 +81,5 @@ final readonly class ServiceRegistrar
                 ->public();
         }
     }
+
 }

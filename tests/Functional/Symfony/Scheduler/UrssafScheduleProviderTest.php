@@ -47,7 +47,7 @@ final class UrssafScheduleProviderTest extends TestCase
 
         $definition = $enabled->getDefinition(UrssafScheduleProvider::class);
         static::assertSame(['scheduler.schedule_provider' => [['name' => 'billing']]], $definition->getTags());
-        static::assertEquals([['submit_pending' => 'PT5M', 'sync_pairing' => 'PT10M', 'sync_statuses' => 'PT30M', 'reconcile_stale' => null]], $definition->getArguments());
+        static::assertEquals([['submit_pending' => 'PT5M', 'sync_pairing' => 'PT10M', 'sync_statuses' => 'PT30M', 'reconcile_stale' => null, 'relay_outbox' => null, 'purge_outbox' => null]], $definition->getArguments());
         static::assertFalse($disabled->hasDefinition(UrssafScheduleProvider::class));
     }
 

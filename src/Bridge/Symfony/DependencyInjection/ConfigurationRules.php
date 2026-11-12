@@ -104,6 +104,18 @@ final class ConfigurationRules
     /**
      * @param array<array-key, mixed> $value
      */
+    public static function outboxWithoutStorage(array $value): bool
+    {
+        /** @var array{outbox: array{enabled: bool, service: ?string}, persistence: array{driver: string}} $config */
+        $config = $value;
+
+        return $config['outbox']['enabled'] && $config['outbox']['service'] === null
+            && $config['persistence']['driver'] === BundleConfiguration::DRIVER_CUSTOM;
+    }
+
+    /**
+     * @param array<array-key, mixed> $value
+     */
     public static function defaultPageAboveMax(array $value): bool
     {
         /** @var array{default_page_size: int, max_page_size: int, max_submission_attempts: int} $workflow */

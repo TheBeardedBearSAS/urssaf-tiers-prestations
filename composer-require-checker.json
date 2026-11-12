@@ -20,6 +20,7 @@
         "Doctrine\\DBAL\\ArrayParameterType",
         "Doctrine\\DBAL\\Connection",
         "Doctrine\\DBAL\\Exception\\UniqueConstraintViolationException",
+        "Doctrine\\DBAL\\ParameterType",
         "Doctrine\\DBAL\\Platforms\\AbstractPlatform",
         "Doctrine\\DBAL\\Types\\Exception\\InvalidFormat",
         "Doctrine\\DBAL\\Types\\Exception\\InvalidType",

@@ -41,12 +41,19 @@ The configuration tree is defined in `Bridge\Symfony\DependencyInjection\BundleC
 | `lock.enabled` | `auto` \| bool | `auto` | Non-blocking lock per command / handler and tenant (see [Locks](#locks-against-overlapping-runs)). `auto`: enabled when `symfony/lock` is installed and the factory service exists; `true`: required (the container fails to build without the factory service, or without `symfony/lock`); `false`: disabled. |
 | `lock.factory` | string | `lock.factory` | Service id of a `Symfony\Component\Lock\LockFactory`. |
 | `lock.ttl` | float >= 1 | `3600.0` | Seconds after which the lock of a crashed process expires. Set it above the longest run of a command. |
+| `outbox.enabled` | bool | `false` | Writes the integration events in an outbox, in the transaction of each state change (see [integration-events.md](integration-events.md)). |
+| `outbox.service` | string \| null | `null` | Service id of your `Outbox` (required with the `custom` driver). Default: the outbox of the persistence driver. |
+| `outbox.sink` | string | `messenger` | `messenger`, `event_dispatcher`, or the service id of an `IntegrationEventSink`. |
+| `outbox.bus` | string | `messenger.default_bus` | Bus of the `messenger` sink. |
+| `outbox.retention` | ISO 8601 duration | `P30D` | How long a dispatched entry is kept (`urssaf:outbox:purge`). |
 | `scheduler.enabled` | bool | `false` | Registers a Symfony Scheduler schedule that runs the crons of the package (see [Scheduler](#scheduler)). Requires `symfony/scheduler`. |
 | `scheduler.name` | string | `urssaf` | Name of the schedule (transport `scheduler_<name>`). |
 | `scheduler.frequencies.submit_pending` | ISO 8601 duration \| null | `PT5M` | `urssaf:customers:submit-pending` and `urssaf:payment-requests:submit-pending`; null leaves the task out. |
 | `scheduler.frequencies.sync_pairing` | ISO 8601 duration \| null | `PT10M` | `urssaf:customers:sync-pairing`. |
 | `scheduler.frequencies.sync_statuses` | ISO 8601 duration \| null | `PT15M` | `urssaf:payment-requests:sync-statuses`. |
 | `scheduler.frequencies.reconcile_stale` | ISO 8601 duration \| null | `PT15M` | `urssaf:customers:reconcile-stale` and `urssaf:payment-requests:reconcile-stale`. |
+| `scheduler.frequencies.relay_outbox` | ISO 8601 duration \| null | `PT1M` | `urssaf:outbox:relay` (only with the outbox). |
+| `scheduler.frequencies.purge_outbox` | ISO 8601 duration \| null | `P1D` | `urssaf:outbox:purge` (only with the outbox). |
 | `messenger.enabled` | bool | `false` | Registers the Messenger handlers. |
 | `messenger.bus` | string | `messenger.default_bus` | Bus used by the auto-submit listener. |
 | `messenger.auto_submit` | bool | `false` | Dispatches the submit messages when a registration / payment request is created. |
@@ -56,6 +63,7 @@ Validation rules enforced at container build time:
 - `credentials` and `credentials_provider` are mutually exclusive, and one of them is required.
 - `messenger.auto_submit` requires `messenger.enabled`.
 - `gateway.simulated` cannot be used with `environment: production`.
+- `outbox.enabled` with the `custom` driver requires `outbox.service`.
 - `lock.enabled: true` requires `symfony/lock`.
 - `scheduler.enabled: true` requires `symfony/scheduler`.
 - `workflow.default_page_size` must not exceed `workflow.max_page_size`.
@@ -104,6 +112,8 @@ each outcome.
 | `urssaf:payment-requests:sync-statuses` | Poll the status of the submitted payment requests (method 070). | optional, default: every tenant with requests to poll |
 | `urssaf:payment-requests:reconcile-stale` | Reconcile the stale `submitting` payment requests: searches them at URSSAF (method 070); found => `submitted`, proven absent => back to `pending` for the next submit run. The command itself never sends a request. | none (all tenants) |
 | `urssaf:requeue-invalid-credentials` | Move the records refused for invalid credentials back to `pending`, once the credentials are fixed. | required |
+| `urssaf:outbox:relay` | Deliver the pending integration events (exit `1` when a delivery failed). | none |
+| `urssaf:outbox:purge` | Delete the outbox entries dispatched for longer than `outbox.retention`. | none |
 | `urssaf:status` | Count the registrations and payment requests by tenant and state (local database only); `--format=json` for monitoring. | optional, default: every tenant with records |
 | `urssaf:check` | Check the installation (see below); `--skip-remote` does not call URSSAF. | optional, default: configured `tenants` |
 
@@ -209,6 +219,7 @@ URSSAF quotas are per tenant. When `symfony/lock` is installed, every console co
 | `payment-requests.reconcile-stale` | `urssaf:payment-requests:reconcile-stale` | `*` |
 | `customers.reconcile-stale` | `urssaf:customers:reconcile-stale` | `*` |
 | `requeue-invalid-credentials` | `urssaf:requeue-invalid-credentials` | tenant |
+| `outbox.relay` | `urssaf:outbox:relay` | `*` |
 
 When the lock is already held: a **command** prints that the operation is already running and exits with `0` (the run
 that holds the lock does the work); a **Messenger handler** throws `RecoverableMessageHandlingException` with a 30 s delay,

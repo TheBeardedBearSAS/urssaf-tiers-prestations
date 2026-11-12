@@ -52,9 +52,10 @@ final class DoctrineIntegrationTest extends TestCase
 
         static::assertDirectoryExists($directory);
         static::assertIsArray($files);
-        static::assertCount(15, $files);
+        static::assertCount(16, $files);
         static::assertSame(
             [
+                'Bridge\\Doctrine\\Entity\\OutboxMessage',
                 'Bridge\\Doctrine\\Entity\\PaymentRequestProgress',
                 'Domain\\Customer\\Address\\PostalAddress',
                 'Domain\\Customer\\Address\\StreetAddress',

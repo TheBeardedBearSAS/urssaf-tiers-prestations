@@ -32,6 +32,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   runs the crons of the package as `RunCommandMessage`s at configurable frequencies (`scheduler.frequencies.*`, ISO 8601
   durations), an alternative to the crontab.
 
+- Integration events and outbox: public scalar events (`Contract\Event\*`: registration submitted / rejected, pairing
+  changed, payment request submitted / rejected / status changed) with a stable `eventId`, written by the `UnitOfWork`
+  to an `Application\Port\Outbox` inside the transaction (`IgnoredOutbox` by default; `InMemoryOutbox`, `DoctrineOutbox`
+  on the new table `urssaf_tps_outbox`), delivered at least once and in order per record by `RelayOutboxHandler` to an
+  `IntegrationEventSink` (Messenger, PSR-14 or your own), purged by `PurgeOutboxHandler`. Bundle: `outbox.*` options,
+  `urssaf:outbox:relay` / `urssaf:outbox:purge`, scheduler tasks `relay_outbox` / `purge_outbox`. See
+  [docs/integration-events.md](docs/integration-events.md).
+
+### Changed
+
+- The domain events of the registration and payment request workflows that have an integration event carry the
+  external reference of the record (`externalReference()`); their constructors take it after the tenant id.
+
 ### Fixed
 
 - The shipped translations were never loaded by the framework: `AbstractBundle` resolves the bundle path one directory

@@ -22,6 +22,8 @@ final readonly class UrssafScheduleProvider implements ScheduleProviderInterface
         'sync_pairing' => ['urssaf:customers:sync-pairing'],
         'sync_statuses' => ['urssaf:payment-requests:sync-statuses'],
         'reconcile_stale' => ['urssaf:customers:reconcile-stale', 'urssaf:payment-requests:reconcile-stale'],
+        'relay_outbox' => ['urssaf:outbox:relay'],
+        'purge_outbox' => ['urssaf:outbox:purge'],
     ];
 
     /**

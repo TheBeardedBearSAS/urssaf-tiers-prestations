@@ -44,6 +44,10 @@ final class BundleConfiguration
                 ->thenInvalid('"gateway.simulated" is meant for tests and cannot be used with "environment: production".')
             ->end()
             ->validate()
+                ->ifTrue(ConfigurationRules::outboxWithoutStorage(...))
+                ->thenInvalid('The "custom" persistence driver requires "outbox.service" when the outbox is enabled.')
+            ->end()
+            ->validate()
                 ->ifTrue(ConfigurationRules::schedulerEnabledWithoutComponent(...))
                 ->thenInvalid('"scheduler.enabled" requires symfony/scheduler (composer require symfony/scheduler).')
             ->end()
@@ -110,6 +114,7 @@ final class BundleConfiguration
                         ->floatNode('ttl')->min(1)->defaultValue(3600.0)->info('Seconds after which a lock of a crashed process expires.')->end()
                     ->end()
                 ->end()
+                ->append(self::outbox())
                 ->append(self::scheduler())
                 ->append(self::workflow())
                 ->append(self::persistence())
@@ -122,6 +127,23 @@ final class BundleConfiguration
                     ->end()
                 ->end()
             ->end();
+    }
+
+    private static function outbox(): ArrayNodeDefinition
+    {
+        $node = new ArrayNodeDefinition('outbox');
+        $node
+            ->info('Integration events (Contract\\Event) written in the transaction of each state change, then relayed to the host (docs/integration-events.md).')
+            ->addDefaultsIfNotSet()
+            ->children()
+                ->booleanNode('enabled')->defaultFalse()->end()
+                ->scalarNode('service')->defaultNull()->info('Service id of your Outbox (default: the outbox of the persistence driver).')->end()
+                ->scalarNode('sink')->defaultValue('messenger')->cannotBeEmpty()->info('"messenger" (bus below), "event_dispatcher", or the service id of an IntegrationEventSink.')->end()
+                ->scalarNode('bus')->defaultValue('messenger.default_bus')->cannotBeEmpty()->info('Bus of the "messenger" sink.')->end()
+                ->scalarNode('retention')->defaultValue('P30D')->info('How long a dispatched entry is kept (urssaf:outbox:purge).')->validate()->ifTrue(ConfigurationRules::isInvalidInterval(...))->thenInvalid('Invalid ISO 8601 duration %s.')->end()->end()
+            ->end();
+
+        return $node;
     }
 
     private static function scheduler(): ArrayNodeDefinition
@@ -139,6 +161,8 @@ final class BundleConfiguration
                     ->append(self::frequency('sync_pairing', 'PT10M', 'urssaf:customers:sync-pairing'))
                     ->append(self::frequency('sync_statuses', 'PT15M', 'urssaf:payment-requests:sync-statuses'))
                     ->append(self::frequency('reconcile_stale', 'PT15M', 'urssaf:customers:reconcile-stale and urssaf:payment-requests:reconcile-stale'))
+                    ->append(self::frequency('relay_outbox', 'PT1M', 'urssaf:outbox:relay (only when the outbox is enabled)'))
+                    ->append(self::frequency('purge_outbox', 'P1D', 'urssaf:outbox:purge (only when the outbox is enabled)'))
                 ->end()
             ->end();
 

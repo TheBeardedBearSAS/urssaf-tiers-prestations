@@ -151,7 +151,7 @@ class PaymentRequest
     {
         $this->moveTo(SubmissionState::Rejected, $errors, $now);
         $this->tracking = $this->tracking->observe($status, $now);
-        $this->events[] = new PaymentRequestRejectedByUrssaf($this->id, $this->tenantId, $errors, $now);
+        $this->events[] = new PaymentRequestRejectedByUrssaf($this->id, $this->tenantId, $this->externalReference, $errors, $now);
     }
 
     /**
@@ -232,7 +232,7 @@ class PaymentRequest
         $this->timeline = $this->timeline->touched($now);
         $current = $this->tracking->current();
         if ($current instanceof UrssafStatusChange && $current !== $previous) {
-            $this->events[] = new PaymentRequestStatusChanged($this->id, $this->tenantId, $previous, $current);
+            $this->events[] = new PaymentRequestStatusChanged($this->id, $this->tenantId, $this->externalReference, $previous, $current);
         }
     }
 
@@ -430,6 +430,6 @@ class PaymentRequest
         $this->submissionErrors = [];
         $this->tracking = $this->tracking->identifiedAs($urssafId, $status, $now);
         $this->timeline = $this->timeline->submitted($now);
-        $this->events[] = new PaymentRequestSubmitted($this->id, $this->tenantId, $urssafId, $now);
+        $this->events[] = new PaymentRequestSubmitted($this->id, $this->tenantId, $this->externalReference, $urssafId, $now);
     }
 }

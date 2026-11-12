@@ -35,6 +35,8 @@ parameters:
                 - LogicException
                 - RuntimeException
                 - TheBeardedBear\UrssafTiersPrestations\Domain\Exception\DomainException
+                # Common properties of the public integration events (scalar, readonly, rebuilt by named arguments).
+                - TheBeardedBear\UrssafTiersPrestations\Contract\Event\IntegrationEvent
                 # Framework extension points without an interface alternative (bridges only).
                 - Doctrine\DBAL\Types\Type
                 - Symfony\Component\HttpKernel\Bundle\AbstractBundle
@@ -58,6 +60,7 @@ parameters:
                 - TheBeardedBear\UrssafTiersPrestations\Domain\Customer\CustomerRegistration
                 - TheBeardedBear\UrssafTiersPrestations\Domain\PaymentRequest\PaymentRequest
                 - TheBeardedBear\UrssafTiersPrestations\Bridge\Doctrine\Entity\PaymentRequestProgress
+                - TheBeardedBear\UrssafTiersPrestations\Bridge\Doctrine\Entity\OutboxMessage
 
     shipmonkRules:
         enableAllRules: true
