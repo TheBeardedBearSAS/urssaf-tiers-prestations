@@ -40,6 +40,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `urssaf:outbox:relay` / `urssaf:outbox:purge`, scheduler tasks `relay_outbox` / `purge_outbox`. See
   [docs/integration-events.md](docs/integration-events.md).
 
+- `Standalone\UrssafTiersPrestationsBuilder`: wires every use case without a framework (in-memory defaults,
+  `withDoctrine()`, token store, clock, logger, rate limiter, events, outbox, policy, gateway) and builds
+  `Standalone\UrssafTiersPrestations`, which returns the handlers. See [docs/standalone.md](docs/standalone.md).
+
 ### Changed
 
 - The domain events of the registration and payment request workflows that have an integration event carry the
