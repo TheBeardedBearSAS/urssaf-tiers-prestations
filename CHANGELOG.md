@@ -28,6 +28,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `Application\Port\WorkflowStatistics`, implemented for the in-memory and Doctrine persistences; optional
   `persistence.workflow_statistics` for a custom one), and the `urssaf:status` command prints them (table or JSON).
 
+- Symfony Scheduler: with `scheduler.enabled`, the bundle registers a schedule (`scheduler.name`, default `urssaf`) that
+  runs the crons of the package as `RunCommandMessage`s at configurable frequencies (`scheduler.frequencies.*`, ISO 8601
+  durations), an alternative to the crontab.
+
 ### Fixed
 
 - The shipped translations were never loaded by the framework: `AbstractBundle` resolves the bundle path one directory

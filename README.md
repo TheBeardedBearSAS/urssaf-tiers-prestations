@@ -225,7 +225,8 @@ framework:
             'TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\Message\SyncTenantPaymentStatusesMessage': async
 ```
 
-Cron (polling and recovery run from the console):
+Cron (polling and recovery run from the console), or the equivalent Symfony Scheduler schedule
+(`scheduler: { enabled: true }`, see [docs/symfony.md](docs/symfony.md#scheduler)):
 
 ```cron
 # pairing of the customers awaiting it (also blocked / mandate_expired ones)

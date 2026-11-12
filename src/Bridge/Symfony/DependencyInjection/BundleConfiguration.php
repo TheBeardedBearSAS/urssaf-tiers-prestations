@@ -6,6 +6,7 @@ namespace TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\DependencyInjecti
 
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
+use Symfony\Component\Config\Definition\Builder\ScalarNodeDefinition;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 
 /**
@@ -41,6 +42,10 @@ final class BundleConfiguration
             ->validate()
                 ->ifTrue(ConfigurationRules::simulatedGatewayInProduction(...))
                 ->thenInvalid('"gateway.simulated" is meant for tests and cannot be used with "environment: production".')
+            ->end()
+            ->validate()
+                ->ifTrue(ConfigurationRules::schedulerEnabledWithoutComponent(...))
+                ->thenInvalid('"scheduler.enabled" requires symfony/scheduler (composer require symfony/scheduler).')
             ->end()
             ->validate()
                 ->ifTrue(ConfigurationRules::autoSubmitWithoutMessenger(...))
@@ -105,6 +110,7 @@ final class BundleConfiguration
                         ->floatNode('ttl')->min(1)->defaultValue(3600.0)->info('Seconds after which a lock of a crashed process expires.')->end()
                     ->end()
                 ->end()
+                ->append(self::scheduler())
                 ->append(self::workflow())
                 ->append(self::persistence())
                 ->arrayNode('messenger')
@@ -116,6 +122,38 @@ final class BundleConfiguration
                     ->end()
                 ->end()
             ->end();
+    }
+
+    private static function scheduler(): ArrayNodeDefinition
+    {
+        $node = new ArrayNodeDefinition('scheduler');
+        $node
+            ->info('Symfony Scheduler schedule running the crons of the package (RunCommandMessage): an alternative to the crontab.')
+            ->addDefaultsIfNotSet()
+            ->children()
+                ->booleanNode('enabled')->defaultFalse()->end()
+                ->scalarNode('name')->defaultValue('urssaf')->cannotBeEmpty()->info('Schedule name: consume it with "messenger:consume scheduler_<name>".')->end()
+                ->arrayNode('frequencies')
+                    ->addDefaultsIfNotSet()
+                    ->append(self::frequency('submit_pending', 'PT5M', 'urssaf:customers:submit-pending and urssaf:payment-requests:submit-pending'))
+                    ->append(self::frequency('sync_pairing', 'PT10M', 'urssaf:customers:sync-pairing'))
+                    ->append(self::frequency('sync_statuses', 'PT15M', 'urssaf:payment-requests:sync-statuses'))
+                    ->append(self::frequency('reconcile_stale', 'PT15M', 'urssaf:customers:reconcile-stale and urssaf:payment-requests:reconcile-stale'))
+                ->end()
+            ->end();
+
+        return $node;
+    }
+
+    private static function frequency(string $task, string $default, string $commands): ScalarNodeDefinition
+    {
+        $node = new ScalarNodeDefinition($task);
+        $node
+            ->defaultValue($default)
+            ->info(\sprintf('ISO 8601 duration between two runs of %s; null to leave the task out.', $commands))
+            ->validate()->ifTrue(ConfigurationRules::isInvalidOptionalInterval(...))->thenInvalid('Invalid ISO 8601 duration %s.')->end();
+
+        return $node;
     }
 
     private static function workflow(): ArrayNodeDefinition

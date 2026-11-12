@@ -64,6 +64,7 @@
         "symfony/polyfill-php83": "^1.31",
         "symfony/property-access": "^6.4.3 || ^7.4",
         "symfony/property-info": "^6.4.3 || ^7.4",
+        "symfony/scheduler": "^6.4.3 || ^7.4",
         "symfony/serializer": "^6.4.3 || ^7.4",
         "symfony/string": "^6.4.3 || ^7.4",
         "symfony/translation": "^6.4.3 || ^7.4",
@@ -87,7 +88,8 @@
         "symfony/http-client": "<6.4",
         "symfony/http-kernel": "<6.4",
         "symfony/lock": "<6.4.3",
-        "symfony/messenger": "<6.4.3"
+        "symfony/messenger": "<6.4.3",
+        "symfony/scheduler": "<6.4.3"
     },
     "suggest": {
         "ext-intl": "Better transliteration of customer names (AsciiNameNormalizer); a built-in fallback map is used otherwise",
@@ -103,6 +105,7 @@
         "symfony/http-kernel": "Required by the Symfony bridge (bundle)",
         "symfony/lock": "Prevents overlapping runs of the same command / handler for a tenant (see the \"lock\" bundle option)",
         "symfony/messenger": "Enables asynchronous message handling",
+        "symfony/scheduler": "Runs the crons of the package as a Symfony Scheduler schedule (see the \"scheduler\" bundle option)",
         "symfony/translation": "Translates the violation codes (English and French shipped)",
         "symfony/validator": "Converts the violations of the package into a ConstraintViolationList (ViolationListConverter)"
     },

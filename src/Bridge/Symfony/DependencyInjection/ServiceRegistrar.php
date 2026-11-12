@@ -10,6 +10,7 @@ use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\Validator\ConstraintViolationList;
 use TheBeardedBear\UrssafTiersPrestations\Application\Query\GetWorkflowOverviewHandler;
 use TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\Command\WorkflowStatusCommand;
+use TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\Scheduler\UrssafScheduleProvider;
 use TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\Validation\ViolationListConverter;
 
 /**
@@ -32,6 +33,7 @@ use TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\Validation\ViolationLis
  *     gateway: array{simulated: bool},
  *     rate_limiter: array{enabled: bool},
  *     lock: array{enabled: bool|string, factory: string, ttl: float},
+ *     scheduler: array{enabled: bool, name: string, frequencies: array<string, ?string>},
  *     workflow: array{business_timezone: string, settled_max_age: string, stale_submission_after: string, billing_third_party_id: string, batch_size: int, default_page_size: int, max_page_size: int, max_submission_attempts: int, unknown_status_max_age: string, max_polling_age: string},
  *     persistence: array{driver: string, customer_registration_repository: ?string, payment_request_repository: ?string, workflow_statistics: ?string, entity_manager: string},
  *     messenger: array{enabled: bool, bus: string, auto_submit: bool}
@@ -60,6 +62,11 @@ final readonly class ServiceRegistrar
         }
         if ($config['messenger']['enabled']) {
             $entryPoints->registerMessenger($config['messenger']);
+        }
+        if ($config['scheduler']['enabled']) {
+            $this->services->set(UrssafScheduleProvider::class)
+                ->args([$config['scheduler']['frequencies']])
+                ->tag('scheduler.schedule_provider', ['name' => $config['scheduler']['name']]);
         }
         if (class_exists(ConstraintViolationList::class)) {
             $this->services->set(ViolationListConverter::class)

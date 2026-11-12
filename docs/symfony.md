@@ -41,6 +41,12 @@ The configuration tree is defined in `Bridge\Symfony\DependencyInjection\BundleC
 | `lock.enabled` | `auto` \| bool | `auto` | Non-blocking lock per command / handler and tenant (see [Locks](#locks-against-overlapping-runs)). `auto`: enabled when `symfony/lock` is installed and the factory service exists; `true`: required (the container fails to build without the factory service, or without `symfony/lock`); `false`: disabled. |
 | `lock.factory` | string | `lock.factory` | Service id of a `Symfony\Component\Lock\LockFactory`. |
 | `lock.ttl` | float >= 1 | `3600.0` | Seconds after which the lock of a crashed process expires. Set it above the longest run of a command. |
+| `scheduler.enabled` | bool | `false` | Registers a Symfony Scheduler schedule that runs the crons of the package (see [Scheduler](#scheduler)). Requires `symfony/scheduler`. |
+| `scheduler.name` | string | `urssaf` | Name of the schedule (transport `scheduler_<name>`). |
+| `scheduler.frequencies.submit_pending` | ISO 8601 duration \| null | `PT5M` | `urssaf:customers:submit-pending` and `urssaf:payment-requests:submit-pending`; null leaves the task out. |
+| `scheduler.frequencies.sync_pairing` | ISO 8601 duration \| null | `PT10M` | `urssaf:customers:sync-pairing`. |
+| `scheduler.frequencies.sync_statuses` | ISO 8601 duration \| null | `PT15M` | `urssaf:payment-requests:sync-statuses`. |
+| `scheduler.frequencies.reconcile_stale` | ISO 8601 duration \| null | `PT15M` | `urssaf:customers:reconcile-stale` and `urssaf:payment-requests:reconcile-stale`. |
 | `messenger.enabled` | bool | `false` | Registers the Messenger handlers. |
 | `messenger.bus` | string | `messenger.default_bus` | Bus used by the auto-submit listener. |
 | `messenger.auto_submit` | bool | `false` | Dispatches the submit messages when a registration / payment request is created. |
@@ -51,6 +57,7 @@ Validation rules enforced at container build time:
 - `messenger.auto_submit` requires `messenger.enabled`.
 - `gateway.simulated` cannot be used with `environment: production`.
 - `lock.enabled: true` requires `symfony/lock`.
+- `scheduler.enabled: true` requires `symfony/scheduler`.
 - `workflow.default_page_size` must not exceed `workflow.max_page_size`.
 - The `custom` driver requires both repository service ids.
 - `business_timezone` must be a known time zone and the durations (`settled_max_age`, `unknown_status_max_age`, `max_polling_age`, `stale_submission_after`) valid ISO 8601 intervals.
@@ -157,6 +164,33 @@ With `messenger.auto_submit: true`, an `AutoSubmitListener` listens to the domai
 `SubmitPaymentRequestsMessage` on the configured bus. Domain events are published after the transaction commit, so the
 consumer always sees the record. The pairing and status polling are still driven by cron (commands) or by your own
 scheduler dispatching the `SyncTenant*` messages.
+
+## Scheduler
+
+Instead of the crontab, the bundle can register a [Symfony Scheduler](https://symfony.com/doc/current/scheduler.html)
+schedule that runs the same console commands, through Messenger (`Symfony\Component\Console\Messenger\RunCommandMessage`,
+handled by the framework): same locks, same reports, same safety nets.
+
+```bash
+composer require symfony/scheduler
+```
+
+```yaml
+urssaf_tiers_prestations:
+    scheduler:
+        enabled: true
+        frequencies: { submit_pending: PT5M, sync_pairing: PT10M, sync_statuses: PT15M, reconcile_stale: PT15M }
+```
+
+Run one worker for the schedule (and keep it running, like any Messenger worker):
+
+```bash
+php bin/console messenger:consume scheduler_urssaf
+```
+
+A command that exits with a non-zero code makes its message fail (`RunCommandFailedException`), so it shows in the
+worker logs and in the failure transport. Run a single scheduler worker (or enable the lock): two workers of the same
+schedule would run each task twice.
 
 ## Locks against overlapping runs
 

@@ -7,10 +7,15 @@ namespace TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\DependencyInjecti
 use DateInterval;
 use DateTimeZone;
 use Symfony\Component\Lock\LockFactory;
+use Symfony\Component\Scheduler\ScheduleProviderInterface;
 use Throwable;
 
 /**
  * Validation predicates of the configuration tree (each one is true when the value is invalid).
+ *
+ * One small predicate per rule of the tree, hence the method count.
+ *
+ * @mago-expect lint:too-many-methods
  */
 final class ConfigurationRules
 {
@@ -80,6 +85,25 @@ final class ConfigurationRules
     /**
      * @param array<array-key, mixed> $value
      */
+    public static function schedulerEnabledWithoutComponent(array $value): bool
+    {
+        return self::schedulerRequiredButMissing($value, interface_exists(ScheduleProviderInterface::class));
+    }
+
+    /**
+     * @param array<array-key, mixed> $value
+     */
+    public static function schedulerRequiredButMissing(array $value, bool $componentInstalled): bool
+    {
+        /** @var array{scheduler: array{enabled: bool}} $config */
+        $config = $value;
+
+        return $config['scheduler']['enabled'] && !$componentInstalled;
+    }
+
+    /**
+     * @param array<array-key, mixed> $value
+     */
     public static function defaultPageAboveMax(array $value): bool
     {
         /** @var array{default_page_size: int, max_page_size: int, max_submission_attempts: int} $workflow */
@@ -103,6 +127,11 @@ final class ConfigurationRules
     public static function isUnknownTimeZone(mixed $zone): bool
     {
         return !\is_string($zone) || !\in_array($zone, DateTimeZone::listIdentifiers(), true);
+    }
+
+    public static function isInvalidOptionalInterval(mixed $value): bool
+    {
+        return $value !== null && self::isInvalidInterval($value);
     }
 
     public static function isInvalidInterval(mixed $value): bool
