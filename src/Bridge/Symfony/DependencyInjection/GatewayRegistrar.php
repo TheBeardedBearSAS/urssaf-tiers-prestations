@@ -54,7 +54,8 @@ final readonly class GatewayRegistrar
         // Also provides the PSR-17 request and stream factories, whatever the PSR-18 client in use.
         $this->services->set(ServiceIds::PSR18_CLIENT, Psr18Client::class)->args([new Reference(ServiceIds::SYMFONY_HTTP_CLIENT)]);
         $this->services->set(ServiceIds::API_CONFIGURATION, ApiConfiguration::class)->args([
-            Environment::from($config['environment']),
+            // Resolved at runtime: the environment is usually an "%env(URSSAF_ENV)%" placeholder.
+            (new Definition(Environment::class, [$config['environment']]))->setFactory([Environment::class, 'from']),
             $config['base_uri'],
             $config['application_id'],
             $config['token_safety_margin'],

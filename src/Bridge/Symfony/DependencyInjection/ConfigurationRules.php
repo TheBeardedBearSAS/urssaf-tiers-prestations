@@ -8,6 +8,7 @@ use DateInterval;
 use DateTimeZone;
 use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Scheduler\ScheduleProviderInterface;
+use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\Environment;
 use Throwable;
 
 /**
@@ -134,6 +135,15 @@ final class ConfigurationRules
 
         return $persistence['driver'] === BundleConfiguration::DRIVER_CUSTOM
             && ($persistence['customer_registration_repository'] === null || $persistence['payment_request_repository'] === null);
+    }
+
+    /**
+     * The empty string is the dummy value of an environment variable placeholder while the container is validated:
+     * an empty variable fails at runtime instead (Environment::from()).
+     */
+    public static function isUnknownEnvironment(mixed $environment): bool
+    {
+        return !\in_array($environment, ['', ...array_map(static fn(Environment $case): string => $case->value, Environment::cases())], true);
     }
 
     public static function isUnknownTimeZone(mixed $zone): bool

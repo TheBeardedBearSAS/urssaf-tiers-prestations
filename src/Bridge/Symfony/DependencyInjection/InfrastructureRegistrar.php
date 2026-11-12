@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\DependencyInjection;
 
-use Psr\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
@@ -16,7 +15,6 @@ use TheBeardedBear\UrssafTiersPrestations\Application\Port\EventPublisher;
 use TheBeardedBear\UrssafTiersPrestations\Application\Port\IdGenerator;
 use TheBeardedBear\UrssafTiersPrestations\Application\Port\RateLimiter;
 use TheBeardedBear\UrssafTiersPrestations\Application\Port\TokenStore;
-use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Clock\SystemClock;
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Credentials\InMemoryCredentialsProvider;
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Event\Psr14EventPublisher;
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Id\RandomUuidGenerator;
@@ -40,10 +38,9 @@ final readonly class InfrastructureRegistrar
      */
     public function register(array $config): void
     {
-        $this->services->set(ServiceIds::PSR_CLOCK, ClockInterface::class)
-            ->factory(PsrClockFactory::class . '::create')
+        $this->services->set(Clock::class, Clock::class)
+            ->factory(ClockFactory::class . '::create')
             ->args([new Reference('clock', ContainerInterface::NULL_ON_INVALID_REFERENCE)]);
-        $this->services->set(Clock::class, SystemClock::class)->args([new Reference(ServiceIds::PSR_CLOCK)]);
         $this->services->set(IdGenerator::class, RandomUuidGenerator::class)->args([new Definition(SecureRandomBytes::class)]);
         $this->services->set(EventPublisher::class, Psr14EventPublisher::class)->args([new Reference('event_dispatcher')]);
         $this->services->set(AsciiNameNormalizer::class)->args([\extension_loaded('intl')]);

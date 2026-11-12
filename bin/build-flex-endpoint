@@ -1,0 +1,88 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Builds a private Symfony Flex endpoint from the recipes of the recipe/ directory: an index.json and one
+ * "<vendor>.<package>.<version>.json" file per recipe, to be served over HTTPS at <base-url>.
+ *
+ * Usage: bin/build-flex-endpoint <output-dir> <base-url>
+ */
+
+if ($argc !== 3) {
+    fwrite(STDERR, "Usage: bin/build-flex-endpoint <output-dir> <base-url>\n");
+    exit(2);
+}
+[, $output, $baseUrl] = $argv;
+$baseUrl = rtrim($baseUrl, '/');
+$recipesDirectory = dirname(__DIR__) . '/recipe';
+
+/**
+ * @return array<string, array{contents: list<string>, executable: bool}>
+ */
+function recipeFiles(string $directory): array
+{
+    $files = [];
+    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS));
+    foreach ($iterator as $file) {
+        if (!$file instanceof SplFileInfo || $file->getFilename() === 'manifest.json') {
+            continue;
+        }
+        $relative = substr($file->getPathname(), strlen($directory) + 1);
+        $contents = (string) file_get_contents($file->getPathname());
+        $files[$relative] = ['contents' => explode("\n", rtrim($contents, "\n")), 'executable' => is_executable($file->getPathname())];
+    }
+    ksort($files);
+
+    return $files;
+}
+
+$index = [];
+$written = [];
+foreach (glob($recipesDirectory . '/*/*/*/manifest.json') ?: [] as $manifestPath) {
+    $versionDirectory = dirname($manifestPath);
+    $version = basename($versionDirectory);
+    $package = basename(dirname($versionDirectory, 2)) . '/' . basename(dirname($versionDirectory));
+    $manifest = json_decode((string) file_get_contents($manifestPath), true, 512, JSON_THROW_ON_ERROR);
+    $files = recipeFiles($versionDirectory);
+    $recipe = [
+        'manifests' => [
+            $package => [
+                'manifest' => $manifest,
+                'files' => $files,
+                'ref' => sha1(json_encode([$manifest, $files], JSON_THROW_ON_ERROR)),
+            ],
+        ],
+    ];
+    $index[$package][] = $version;
+    $written[str_replace('/', '.', $package) . '.' . $version . '.json'] = $recipe;
+}
+
+if ($written === []) {
+    fwrite(STDERR, sprintf("No recipe found in %s\n", $recipesDirectory));
+    exit(1);
+}
+if (!is_dir($output) && !mkdir($output, 0o777, true) && !is_dir($output)) {
+    fwrite(STDERR, sprintf("Cannot create %s\n", $output));
+    exit(1);
+}
+foreach ($index as $package => $versions) {
+    sort($versions);
+    $index[$package] = $versions;
+}
+$written['index.json'] = [
+    'aliases' => new stdClass(),
+    'recipes' => $index,
+    'branch' => 'main',
+    'is_contrib' => false,
+    '_links' => [
+        'repository' => $baseUrl,
+        'origin_template' => '{package}:{version}@' . $baseUrl,
+        'recipe_template' => $baseUrl . '/{package_dotted}.{version}.json',
+    ],
+];
+foreach ($written as $name => $contents) {
+    file_put_contents($output . '/' . $name, json_encode($contents, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+    fwrite(STDOUT, sprintf("%s/%s\n", $output, $name));
+}

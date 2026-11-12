@@ -3,6 +3,14 @@
 Bundle class: `TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\UrssafTiersPrestationsBundle` (alias
 `urssaf_tiers_prestations`), for Symfony 6.4 and 7.x. Register it in `config/bundles.php`.
 
+## Symfony Flex recipe
+
+The recipe lives in `recipe/thebeardedbear/urssaf-tiers-prestations/<version>/` (manifest and copied files);
+`bin/build-flex-endpoint <output-dir> <base-url>` turns it into a private Flex endpoint (`index.json` and one JSON file
+per recipe) to serve at `<base-url>`, which applications declare in `extra.symfony.endpoint` (see the README). A test
+boots the bundle with the copied configuration, so that the recipe follows the configuration tree. Add a new version
+directory when a release changes the recipe (Flex picks the highest version not above the installed package version).
+
 ## Configuration reference
 
 The configuration tree is defined in `Bridge\Symfony\DependencyInjection\BundleConfiguration`.

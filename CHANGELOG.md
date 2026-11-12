@@ -44,6 +44,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `withDoctrine()`, token store, clock, logger, rate limiter, events, outbox, policy, gateway) and builds
   `Standalone\UrssafTiersPrestations`, which returns the handlers. See [docs/standalone.md](docs/standalone.md).
 
+- Symfony Flex recipe (`recipe/`): registers the bundle, copies a commented configuration (simulated gateway in the
+  `test` environment) and adds the `URSSAF_*` variables to `.env`; `bin/build-flex-endpoint` builds the private Flex
+  endpoint (CI artifact `flex-endpoint`).
+
 ### Changed
 
 - The domain events of the registration and payment request workflows that have an integration event carry the
@@ -51,6 +55,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- `environment: '%env(URSSAF_ENV)%'` (the documented configuration) broke the container: the environment was converted
+  to the enum at build time. It is now resolved at runtime, and the configuration accepts the placeholder.
+- The bundle required `symfony/clock` without declaring it: without a `clock` service it now falls back to the UTC
+  system clock of the package.
 - The shipped translations were never loaded by the framework: `AbstractBundle` resolves the bundle path one directory
   above the bundle class, so `Resources/translations` was not found. The bundle now declares its own path.
 
