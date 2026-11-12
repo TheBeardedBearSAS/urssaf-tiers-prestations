@@ -50,6 +50,9 @@
         "Symfony\\Component\\Messenger\\Exception\\RecoverableMessageHandlingException",
         "Symfony\\Component\\Messenger\\Exception\\UnrecoverableMessageHandlingException",
         "Symfony\\Component\\Messenger\\MessageBusInterface",
+        "Symfony\\Component\\Validator\\ConstraintViolation",
+        "Symfony\\Component\\Validator\\ConstraintViolationList",
+        "Symfony\\Contracts\\Translation\\TranslatorInterface",
         "Symfony\\Contracts\\HttpClient\\HttpClientInterface",
         "Transliterator"
     ],

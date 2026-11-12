@@ -11,6 +11,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - French translations of the violation codes (`urssaf_tiers_prestations.fr.yaml`), shipped next to the English ones;
   the test suite checks that every shipped locale has the same keys as the English file.
+- `Bridge\Symfony\Validation\ViolationListConverter` (public service when `symfony/validator` is installed): converts a
+  `ValidationResult` or a `ValidationFailed` into a Symfony `ConstraintViolationList` (path, code, translated message,
+  `%name%` parameters, original violation as cause), for forms and API error responses. See
+  [docs/symfony.md](docs/symfony.md#validation-and-forms).
+
+### Fixed
+
+- The shipped translations were never loaded by the framework: `AbstractBundle` resolves the bundle path one directory
+  above the bundle class, so `Resources/translations` was not found. The bundle now declares its own path.
 
 ## [0.1.1] - 2026-11-11
 

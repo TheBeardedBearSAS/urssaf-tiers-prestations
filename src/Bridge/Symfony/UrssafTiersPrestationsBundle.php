@@ -24,6 +24,15 @@ final class UrssafTiersPrestationsBundle extends AbstractBundle
 
     protected string $extensionAlias = self::ALIAS;
 
+    /**
+     * The bundle directory ({@see AbstractBundle} assumes a class one level below it), so that the framework finds the
+     * shipped translations in Resources/translations.
+     */
+    public function getPath(): string
+    {
+        return __DIR__;
+    }
+
     public function configure(DefinitionConfigurator $definition): void
     {
         BundleConfiguration::define($definition);

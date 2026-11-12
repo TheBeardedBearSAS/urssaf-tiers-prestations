@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\DependencyInjection;
 
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
+use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\Validator\ConstraintViolationList;
+use TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\Validation\ViolationListConverter;
 
 /**
  * Declares the services of the bundle from its processed configuration. Services are private (the default of the
- * container configurator), except the use case handlers (the entry points of the host application).
+ * container configurator), except the use case handlers (the entry points of the host application) and the
+ * violation list converter (registered when symfony/validator is installed).
  *
  * @phpstan-type Config array{
  *     environment: string,
@@ -47,6 +52,11 @@ final readonly class ServiceRegistrar
         $entryPoints->registerConsole();
         if ($config['messenger']['enabled']) {
             $entryPoints->registerMessenger($config['messenger']);
+        }
+        if (class_exists(ConstraintViolationList::class)) {
+            $this->services->set(ViolationListConverter::class)
+                ->args([new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE)])
+                ->public();
         }
     }
 }

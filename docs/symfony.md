@@ -200,6 +200,66 @@ proxies rely on; without it the ORM throws "Symfony LazyGhost is not available")
 `doctrine` configuration wins, for instance `enable_native_lazy_objects: false` with `symfony/var-exporter` 6.4 or 7. On
 PHP 8.2 and 8.3 nothing is prepended.
 
+## Validation and forms
+
+The use cases validate their input themselves and throw `ValidationFailed` with every violation at once (code
+`<subject>.<reason>`, path such as `invoice.lines[0].quantity`, scalar params). When `symfony/validator` is installed, the
+bundle registers the public service `Bridge\Symfony\Validation\ViolationListConverter`, which turns them into a Symfony
+`ConstraintViolationList`:
+
+| `ConstraintViolation` | Value |
+|---|---|
+| `getPropertyPath()` | the violation path, with the optional prefix (`customer.birthDate`) |
+| `getCode()`, `getMessageTemplate()` | the violation code (`birth_date.in_future`) |
+| `getMessage()` | the translation of the code in the domain `urssaf_tiers_prestations` (current locale of the `translator`), or the English message without translator |
+| `getParameters()` | the violation params as `%name%` placeholders |
+| `getCause()` | the original `Domain\Validation\Violation` |
+| `getInvalidValue()` | always `null`: the rejected raw values (personal data) are never exposed |
+
+`convert()` keeps the errors only; `convertWithWarnings()` keeps the warnings too.
+
+The drafts (`Domain\Customer\Input\CustomerDraft`, `Domain\PaymentRequest\Input\PaymentRequestDraft` and their nested
+drafts) are plain readonly objects with nullable properties: the Serializer builds them from a request body
+(`#[MapRequestPayload]`, or `$serializer->deserialize($json, PaymentRequestDraft::class, 'json')`). The list of service
+lines needs a PHPDoc type extractor (`symfony/property-info` with `phpstan/phpdoc-parser`, enabled by default in a
+Symfony application). Missing JSON keys become `null` and are reported by the use case as `field.required`.
+
+An API controller:
+
+```php
+#[Route('/customers/{reference}/payment-requests', methods: ['POST'])]
+public function create(
+    string $reference,
+    #[MapRequestPayload] PaymentRequestDraft $draft,
+    CreatePaymentRequestHandler $createPaymentRequest,
+    ViolationListConverter $violations,
+): Response {
+    try {
+        $id = $createPaymentRequest(new CreatePaymentRequest(
+            TenantId::fromString('tenant-1'),
+            CustomerSelector::byExternalReference(ExternalReference::fromString($reference)),
+            $draft,
+        ));
+    } catch (ValidationFailed $failed) {
+        // API Platform / Problem Details style: the list serializes with the "constraint_violation_list" normalizer.
+        throw new ValidationFailedException($draft, $violations->convert($failed));
+    }
+
+    return $this->json(['id' => $id->value()], Response::HTTP_CREATED);
+}
+```
+
+With a form, map each violation on the form (the paths follow the property paths of the draft):
+
+```php
+foreach ($violations->convert($failed) as $violation) {
+    $form->addError(new FormError((string) $violation->getMessage(), $violation->getMessageTemplate(), $violation->getParameters(), null, $violation));
+}
+```
+
+or let the Form component place them on the matching fields with
+`(new ViolationMapper())->mapViolation($violation, $form)` for each violation, the form data being the draft.
+
 ## Translations
 
 The violation codes (`<subject>.<reason>`, for example `birth_date.in_future`) are translatable messages of the
