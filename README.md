@@ -210,7 +210,8 @@ urssaf_tiers_prestations:
 ```
 
 Every option is described in [docs/symfony.md](docs/symfony.md). Create the tables with
-`doctrine:migrations:diff` (the package ships no migration, see [docs/doctrine.md](docs/doctrine.md)).
+`doctrine:migrations:diff` (the package ships no migration, see [docs/doctrine.md](docs/doctrine.md)), then check the
+installation with `php bin/console urssaf:check` (credentials, authentication, token store, schema, lock).
 
 Messenger: the four messages are handled automatically; route them to your transport:
 

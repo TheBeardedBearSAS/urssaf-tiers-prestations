@@ -51,6 +51,7 @@ final readonly class ServiceRegistrar
         (new ApplicationRegistrar($this->services))->register($config['workflow']);
         $entryPoints = new EntryPointRegistrar($this->services);
         $entryPoints->registerConsole();
+        (new DiagnosticRegistrar($this->services))->register($config);
         if ($config['messenger']['enabled']) {
             $entryPoints->registerMessenger($config['messenger']);
         }

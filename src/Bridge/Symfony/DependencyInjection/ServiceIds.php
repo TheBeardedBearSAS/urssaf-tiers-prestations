@@ -14,5 +14,7 @@ final class ServiceIds
     public const PSR18_CLIENT = 'urssaf_tiers_prestations.psr18_client';
     public const API_CONFIGURATION = 'urssaf_tiers_prestations.api_configuration';
     public const TOKEN_PROVIDER = 'urssaf_tiers_prestations.token_provider';
+    /** Token provider of the "urssaf:check" command: its own in-memory store, so that every check asks URSSAF. */
+    public const PROBE_TOKEN_PROVIDER = 'urssaf_tiers_prestations.probe_token_provider';
     public const JSON_CLIENT = 'urssaf_tiers_prestations.json_client';
 }

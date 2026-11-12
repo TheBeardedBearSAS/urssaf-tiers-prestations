@@ -11,6 +11,7 @@ use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use TheBeardedBear\UrssafTiersPrestations\Bridge\Doctrine\DoctrineIntegration;
 use TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\DependencyInjection\BundleConfiguration;
 use TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\DependencyInjection\ServiceRegistrar;
+use TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\Diagnostic\InstallationCheck;
 
 /**
  * Symfony integration of the URSSAF "API Tiers de prestations" client (Symfony 6.4 and 7.x).
@@ -70,6 +71,7 @@ final class UrssafTiersPrestationsBundle extends AbstractBundle
         $tenants = $validated['tenants'] !== [] ? $validated['tenants'] : array_map(strval(...), array_keys($validated['credentials']));
         $configurator->parameters()->set(self::PARAMETER_TENANTS, $tenants);
         (new ServiceRegistrar($configurator->services()))->register($validated);
+        $container->registerForAutoconfiguration(InstallationCheck::class)->addTag(InstallationCheck::TAG);
     }
 
     /**

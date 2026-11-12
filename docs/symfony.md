@@ -96,6 +96,7 @@ each outcome.
 | `urssaf:payment-requests:sync-statuses` | Poll the status of the submitted payment requests (method 070). | optional, default: every tenant with requests to poll |
 | `urssaf:payment-requests:reconcile-stale` | Reconcile the stale `submitting` payment requests: searches them at URSSAF (method 070); found => `submitted`, proven absent => back to `pending` for the next submit run. The command itself never sends a request. | none (all tenants) |
 | `urssaf:requeue-invalid-credentials` | Move the records refused for invalid credentials back to `pending`, once the credentials are fixed. | required |
+| `urssaf:check` | Check the installation (see below); `--skip-remote` does not call URSSAF. | optional, default: configured `tenants` |
 
 Exit codes: `0` on success; `1` when an item ended `failed`, `invalid_credentials` or `unconfirmed`, or when a package
 exception (`UrssafException`) or an invalid option (for example `--limit=0`, a missing `--tenant`, or no tenant to
@@ -103,6 +104,23 @@ process) stops the command. The message is printed as an error.
 
 Outcomes (`Application\Dto\ItemOutcome`): `not_found`, `not_claimed`, `accepted`, `rejected`, `invalid_credentials`,
 `requeued`, `exhausted`, `unconfirmed`, `manual_review`, `changed`, `unchanged`, `unknown_status`, `ignored`, `failed`, `reconciled`.
+
+### Checking the installation
+
+`urssaf:check` prints one line per check and exits with `1` when one of them fails (warnings do not fail): run it after
+each deployment, or in the CI of the application with `--skip-remote`.
+
+| Check | Failure / warning |
+|---|---|
+| `credentials` | failure: no credentials for a tenant in the configured provider |
+| `authentication` | failure: URSSAF refuses the credentials or cannot be reached. A new access token is requested for every tenant (any cached one is ignored), the tokens of the application are not touched. Skipped with `--skip-remote`; replaced by a `gateway` warning when `gateway.simulated` is enabled |
+| `token store` | warning: the tokens are stored in `cache.app` instead of a dedicated pool |
+| `database schema` | failure (driver `doctrine`): the package tables are missing or differ from the mapping; warning: the entity manager is the `default` one |
+| `lock` | warning: the lock is disabled or `symfony/lock` is missing |
+
+Add checks of your own by implementing `Bridge\Symfony\Diagnostic\InstallationCheck` (autoconfigured, tag
+`urssaf_tiers_prestations.installation_check`): they run after the package checks, unless their tag has a positive
+`priority`.
 
 ## Messenger
 

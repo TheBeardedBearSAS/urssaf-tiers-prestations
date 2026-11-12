@@ -20,6 +20,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   pairing statuses, submissions, searches per tenant, scriptable sequences, refusals and failures), and the bundle option
   `gateway.simulated` (refused in production) that wires it as a public service. See [docs/testing.md](docs/testing.md).
 
+- `urssaf:check` console command: credentials, OAuth2 authentication of every tenant (`--skip-remote` to skip it),
+  token store, database schema of the package tables, dedicated entity manager and lock; exits with 1 when a check fails.
+  Host checks implement `Bridge\Symfony\Diagnostic\InstallationCheck` (autoconfigured).
+
 ### Fixed
 
 - The shipped translations were never loaded by the framework: `AbstractBundle` resolves the bundle path one directory

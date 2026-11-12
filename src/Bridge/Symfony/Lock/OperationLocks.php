@@ -19,6 +19,14 @@ final readonly class OperationLocks
 
     public function __construct(private ?LockFactory $factory, private float $ttl = 3600.0) {}
 
+    /**
+     * False when the lock is disabled or symfony/lock is missing: every operation then runs unlocked.
+     */
+    public function isEnabled(): bool
+    {
+        return $this->factory instanceof LockFactory;
+    }
+
     public static function resource(string $operation, string $scope): string
     {
         return \sprintf('%s.%s.%s', self::PREFIX, $operation, $scope);

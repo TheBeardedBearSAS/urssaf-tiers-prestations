@@ -22,6 +22,7 @@ use TheBeardedBear\UrssafTiersPrestations\Application\Port\Urssaf\PaymentRequest
 use TheBeardedBear\UrssafTiersPrestations\Application\Port\Urssaf\PaymentRequestSubmitter;
 use TheBeardedBear\UrssafTiersPrestations\Application\Port\Urssaf\TransmissionStatusReader;
 use TheBeardedBear\UrssafTiersPrestations\Application\Port\Urssaf\UrssafGateway;
+use TheBeardedBear\UrssafTiersPrestations\Infrastructure\TokenStore\InMemoryTokenStore;
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\ApiConfiguration;
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\Environment;
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\Http\JsonApiClient;
@@ -64,17 +65,19 @@ final readonly class GatewayRegistrar
         $client = new Reference($config['http_client'] ?? ServiceIds::PSR18_CLIENT);
         $factories = new Reference(ServiceIds::PSR18_CLIENT);
         $logger = new Reference('logger', ContainerInterface::IGNORE_ON_INVALID_REFERENCE);
-        $this->services->set(ServiceIds::TOKEN_PROVIDER, OAuth2TokenProvider::class)
-            ->args([
-                $client,
-                $factories,
-                $factories,
-                new Reference(TokenStore::class),
-                new Reference(Clock::class),
-                new Reference(ServiceIds::API_CONFIGURATION),
-                $logger,
-            ])
-            ->tag(self::LOGGER_TAG, ['channel' => self::LOGGER_CHANNEL]);
+        foreach ([ServiceIds::TOKEN_PROVIDER => new Reference(TokenStore::class), ServiceIds::PROBE_TOKEN_PROVIDER => new Definition(InMemoryTokenStore::class)] as $id => $tokenStore) {
+            $this->services->set($id, OAuth2TokenProvider::class)
+                ->args([
+                    $client,
+                    $factories,
+                    $factories,
+                    $tokenStore,
+                    new Reference(Clock::class),
+                    new Reference(ServiceIds::API_CONFIGURATION),
+                    $logger,
+                ])
+                ->tag(self::LOGGER_TAG, ['channel' => self::LOGGER_CHANNEL]);
+        }
         $this->services->set(ServiceIds::JSON_CLIENT, JsonApiClient::class)
             ->args([
                 $client,
