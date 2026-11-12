@@ -27,6 +27,7 @@ use TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\Validation\ViolationLis
  *     credentials: array<string, array{client_id: string, client_secret: string}>,
  *     tenants: list<string>,
  *     token_store: array{cache_pool: string, service: ?string},
+ *     gateway: array{simulated: bool},
  *     rate_limiter: array{enabled: bool},
  *     lock: array{enabled: bool|string, factory: string, ttl: float},
  *     workflow: array{business_timezone: string, settled_max_age: string, stale_submission_after: string, billing_third_party_id: string, batch_size: int, default_page_size: int, max_page_size: int, max_submission_attempts: int, unknown_status_max_age: string, max_polling_age: string},

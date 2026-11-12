@@ -16,6 +16,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `%name%` parameters, original violation as cause), for forms and API error responses. See
   [docs/symfony.md](docs/symfony.md#validation-and-forms).
 
+- `Testing\SimulatedUrssafGateway`: an in-memory URSSAF platform implementing the gateway port (registrations,
+  pairing statuses, submissions, searches per tenant, scriptable sequences, refusals and failures), and the bundle option
+  `gateway.simulated` (refused in production) that wires it as a public service. See [docs/testing.md](docs/testing.md).
+
 ### Fixed
 
 - The shipped translations were never loaded by the framework: `AbstractBundle` resolves the bundle path one directory

@@ -28,6 +28,8 @@ The full description of the API (fields, rules, codes, statuses, official JSON e
 - Doctrine ORM persistence (XML mapping shipped with the package, custom DBAL types, atomic claims), with GDPR tools
   (anonymisation, deletion, encryptable columns).
 - Optional Symfony Lock per command / handler and tenant against overlapping runs.
+- A simulated URSSAF platform (`Testing\SimulatedUrssafGateway`, `gateway.simulated: true`) to test a host application
+  end to end without network.
 
 ## Requirements
 
@@ -333,6 +335,7 @@ package implements (currently `1.30.19`). See [CHANGELOG.md](CHANGELOG.md).
 - [docs/symfony.md](docs/symfony.md) - bundle configuration, commands, Messenger
 - [docs/doctrine.md](docs/doctrine.md) - persistence
 - [docs/workflow.md](docs/workflow.md) - state machines and rules
+- [docs/testing.md](docs/testing.md) - testing a host application with the simulated URSSAF platform
 - [docs/migrating-from-legacy-integration.md](docs/migrating-from-legacy-integration.md) - migrating an in-house integration
 
 ## License

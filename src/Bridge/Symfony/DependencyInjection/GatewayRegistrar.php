@@ -28,6 +28,7 @@ use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\Http\JsonApiClie
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\Http\OAuth2TokenProvider;
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\UrssafHttpGateway;
 use TheBeardedBear\UrssafTiersPrestations\Infrastructure\Urssaf\Wire\TransmissionStatusMapper;
+use TheBeardedBear\UrssafTiersPrestations\Testing\SimulatedUrssafGateway;
 
 /**
  * The URSSAF HTTP gateway and everything it needs: PSR-18 client, PSR-17 factories, access tokens, JSON client.
@@ -98,6 +99,14 @@ final readonly class GatewayRegistrar
             ->tag(self::LOGGER_TAG, ['channel' => self::LOGGER_CHANNEL]);
         foreach ([CustomerRegistrar::class, TransmissionStatusReader::class, PaymentRequestSubmitter::class, PaymentRequestFinder::class] as $port) {
             $this->services->alias($port, UrssafGateway::class);
+        }
+        if ($config['gateway']['simulated']) {
+            $this->services->set(UrssafGateway::class, SimulatedUrssafGateway::class)->args([
+                new Reference(Clock::class),
+                new Reference(IdGenerator::class),
+                new Definition(DateTimeZone::class, [$config['workflow']['business_timezone']]),
+            ]);
+            $this->services->alias(SimulatedUrssafGateway::class, UrssafGateway::class)->public();
         }
     }
 }

@@ -21,6 +21,7 @@ The configuration tree is defined in `Bridge\Symfony\DependencyInjection\BundleC
 | `tenants` | list of string | keys of `credentials` | Tenants processed by the commands that cannot discover them. |
 | `token_store.cache_pool` | string | `cache.app` | Cache pool (PSR-6) that stores the access tokens. Recommended: a **dedicated pool** (see below), so that clearing `cache.app` does not drop the tokens and the tokens never share a pool with unrelated data. |
 | `token_store.service` | string \| null | `null` | Service id of a `TokenStore`; takes precedence over the cache pool. |
+| `gateway.simulated` | bool | `false` | Tests only: replaces the URSSAF API with the in-memory `Testing\SimulatedUrssafGateway`, exposed as a public service to script the scenarios (see [testing.md](testing.md)). Refused with `environment: production`. |
 | `rate_limiter.enabled` | bool | `false` | Enforces the URSSAF quotas per tenant, in the current process (`SlidingWindowRateLimiter`). |
 | `workflow.business_timezone` | string | `Europe/Paris` | Time zone used for date-only values (validated against `DateTimeZone::listIdentifiers()`). |
 | `workflow.settled_max_age` | ISO 8601 duration | `P90D` | How long a paid/recovered request is still polled. |
@@ -47,6 +48,7 @@ Validation rules enforced at container build time:
 
 - `credentials` and `credentials_provider` are mutually exclusive, and one of them is required.
 - `messenger.auto_submit` requires `messenger.enabled`.
+- `gateway.simulated` cannot be used with `environment: production`.
 - `lock.enabled: true` requires `symfony/lock`.
 - `workflow.default_page_size` must not exceed `workflow.max_page_size`.
 - The `custom` driver requires both repository service ids.

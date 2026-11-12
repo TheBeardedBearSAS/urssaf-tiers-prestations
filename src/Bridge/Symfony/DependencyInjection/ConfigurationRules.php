@@ -39,6 +39,17 @@ final class ConfigurationRules
     /**
      * @param array<array-key, mixed> $value
      */
+    public static function simulatedGatewayInProduction(array $value): bool
+    {
+        /** @var array{environment: string, gateway: array{simulated: bool}} $config */
+        $config = $value;
+
+        return $config['gateway']['simulated'] && $config['environment'] === 'production';
+    }
+
+    /**
+     * @param array<array-key, mixed> $value
+     */
     public static function autoSubmitWithoutMessenger(array $value): bool
     {
         /** @var array{messenger: array{enabled: bool, auto_submit: bool}} $config */
