@@ -186,7 +186,8 @@ jobs:
           retention-days: 7
 
   # SonarQube Cloud analysis (quality gate, reliability, security, maintainability), fed with the coverage and JUnit
-  # reports of the coverage job. Public repositories only, when the SONAR_TOKEN secret is set.
+  # reports of the coverage job. Public repositories only, when the SONAR_TOKEN secret is set and the repository
+  # variable SONARCLOUD is `enabled` (set once the project is imported on SonarQube Cloud).
   sonarcloud:
     name: sonarcloud
     needs: coverage
@@ -203,7 +204,7 @@ jobs:
           name: coverage
           path: var/coverage
       - uses: SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4 # v8.5.0
-        if: env.SONAR_TOKEN != ''
+        if: env.SONAR_TOKEN != '' && vars.SONARCLOUD == 'enabled'
 
   # PHPBench (tools/phpbench, out of the package dependencies). On a pull request, the benchmarks of the branch also run
   # against the base commit in the same job, and the job fails on a regression of more than 20 %.
