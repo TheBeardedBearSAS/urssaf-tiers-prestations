@@ -13,7 +13,7 @@ UNIT_FUNCTIONAL := --testsuite=$(SUITES)
 
 .DEFAULT_GOAL := help
 .PHONY: help build install update shell test test-unit test-functional test-contract coverage coverage-paths \
-	infection phpstan mago cs cs-fix rector rector-fix deptrac composer-checks guard ci
+	bench infection phpstan mago cs cs-fix rector rector-fix deptrac composer-checks guard ci
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "%-16s %s\n", $$1, $$2}'
@@ -49,6 +49,10 @@ coverage: ## Coverage (pcov): text + clover + html in var/coverage, enforce 100%
 
 coverage-paths: ## Path coverage report (Xdebug)
 	$(PHP_XDEBUG) php -d pcov.enabled=0 vendor/bin/phpunit $(UNIT_FUNCTIONAL) --path-coverage --coverage-html var/coverage/paths
+
+bench: ## Benchmarks (PHPBench in tools/phpbench, out of the package dependencies); e.g. make bench ARGS="--tag=main"
+	$(PHP) composer install --no-progress --working-dir=tools/phpbench
+	$(PHP) tools/phpbench/vendor/bin/phpbench run --report=urssaf $(ARGS)
 
 infection: ## Mutation testing (100% MSI); runs its own initial test pass (never --skip-initial-tests: false positives)
 	$(PHP) vendor/bin/infection --min-msi=100 --min-covered-msi=100 --threads=max --show-mutations --no-progress \

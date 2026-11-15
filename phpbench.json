@@ -1,0 +1,27 @@
+{
+    "$schema": "./tools/phpbench/vendor/phpbench/phpbench/phpbench.schema.json",
+    "runner.bootstrap": "vendor/autoload.php",
+    "runner.path": "tests/Benchmark",
+    "runner.file_pattern": "*Bench.php",
+    "runner.revs": 500,
+    "runner.iterations": 5,
+    "runner.warmup": 1,
+    "runner.retry_threshold": 5,
+    "runner.progress": "none",
+    "report.generators": {
+        "urssaf": {
+            "generator": "expression",
+            "cols": [
+                "benchmark",
+                "subject",
+                "revs",
+                "its",
+                "mem_peak",
+                "mode",
+                "rstdev"
+            ],
+            "break": []
+        }
+    },
+    "storage.xml_storage_path": "var/phpbench"
+}
