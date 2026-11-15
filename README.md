@@ -1,5 +1,10 @@
 # URSSAF Tiers de Prestations
 
+<!-- the-bearded-bear:badges:start -->
+[![CI](https://github.com/TheBeardedBearSAS/urssaf-tiers-prestations/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/TheBeardedBearSAS/urssaf-tiers-prestations/actions/workflows/ci.yml?query=branch%3Amain)
+[![Packagist version](https://img.shields.io/packagist/v/thebeardedbear/urssaf-tiers-prestations)](https://packagist.org/packages/thebeardedbear/urssaf-tiers-prestations) [![PHP version](https://img.shields.io/packagist/dependency-v/thebeardedbear/urssaf-tiers-prestations/php)](https://packagist.org/packages/thebeardedbear/urssaf-tiers-prestations) [![Downloads](https://img.shields.io/packagist/dt/thebeardedbear/urssaf-tiers-prestations)](https://packagist.org/packages/thebeardedbear/urssaf-tiers-prestations/stats) [![PHPStan level max](https://img.shields.io/badge/PHPStan-level%20max-brightgreen)](phpstan.neon.dist) [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+<!-- the-bearded-bear:badges:end -->
+
 PHP client, domain model and Symfony/Doctrine integration for the URSSAF **"API Tiers de prestations"**, the service
 that lets home services providers (services a la personne) offer the **immediate tax-credit advance** to their
 customers: the provider registers the customer, sends payment requests, and URSSAF debits the customer for the part
@@ -275,6 +280,7 @@ make install      # build the image and install dependencies
 make test         # unit + functional tests
 make coverage     # PHPUnit coverage, 100 % lines/methods/classes enforced
 make infection    # mutation testing, 100 % MSI
+make bench        # benchmarks (PHPBench): validation, wire encoding and decoding
 make ci           # the full quality gate
 ```
 
@@ -287,6 +293,11 @@ Quality gates (all blocking): PHPUnit with 100 % coverage, Infection with 100 % 
 (`make mago`), PHP-CS-Fixer (`make cs`, `make cs-fix`), Rector (`make rector`), Deptrac (`make deptrac`), composer
 checks (`make composer-checks`: validate, audit, normalize, require-checker, unused) and `make guard`.
 Use `PHP_VERSION=8.3 make ci` to run against another PHP version.
+
+Published proofs (public repository, `main`): the coverage report on Codecov, the full mutation report on the Stryker
+Dashboard, the SonarQube Cloud quality gate and the OpenSSF Scorecard (`.github/workflows/scorecard.yml`), linked from
+the badges at the top of this file. The benchmarks (`tests/Benchmark`, PHPBench in `tools/phpbench`, out of the package
+dependencies) run on every pull request against the base commit, and the job fails on a regression of more than 20 %.
 
 ### Contract tests against the sandbox
 
