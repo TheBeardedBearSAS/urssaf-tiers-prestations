@@ -24,6 +24,18 @@ Never include real credentials (`client_id` / `client_secret`), access tokens, o
 You will get an acknowledgement within 5 working days. The fix is then prepared privately and released, and the
 advisory is published with credit to the reporter unless you ask otherwise.
 
+## Verifying a release
+
+Every GitHub release carries the distribution archive (same content as the Composer dist), its `SHA256SUMS` and a
+SLSA build provenance attestation (`*.intoto.jsonl`, a Sigstore bundle signed keylessly by the `release.yml`
+workflow). To check that an archive was built by this repository's workflow from the tagged commit:
+
+```bash
+gh release download vX.Y.Z --repo TheBeardedBearSAS/urssaf-tiers-prestations
+sha256sum --check SHA256SUMS
+gh attestation verify urssaf-tiers-prestations-vX.Y.Z.zip --repo TheBeardedBearSAS/urssaf-tiers-prestations
+```
+
 ## Scope
 
 In scope: the code of this package (HTTP client, OAuth2 token handling, validation, wire encoding, Symfony bundle,
