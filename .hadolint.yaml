@@ -1,0 +1,3 @@
+# Dockerfile lint (make hadolint, CI job "hadolint"): every rule, failing from the "style" level up. Exceptions are
+# inline (# hadolint ignore=...) with their justification.
+failure-threshold: style

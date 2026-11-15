@@ -7,7 +7,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Benchmarks (`tests/Benchmark`, `make bench`, PHPBench isolated in `tools/phpbench`): customer validation, wire
+  encoding (registration, batch of 10 payment requests) and decoding (submission outcome, search); the CI job
+  `benchmark` compares each pull request with its base commit and fails above a 20 % regression.
+- Published quality proofs: Codecov (coverage), Stryker Dashboard (mutation report of `main`), SonarQube Cloud (job
+  `sonarcloud`) and OpenSSF Scorecard (workflow `scorecard.yml`), with their badges in the README.
+
 ### Changed
+
+- CI: every GitHub Action is pinned to a commit SHA, kept up to date by Dependabot (`.github/dependabot.yml`, also
+  for Composer).
+- Dockerfile linted by hadolint (`make hadolint`, part of `make ci`, CI job `hadolint`); the development image runs as
+  a non-root user by default.
 
 - README: maintainer (The Bearded Bear), the other URSSAF packages and professional support; composer
   `authors` now points to https://the-bearded-bear.com.

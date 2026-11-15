@@ -1,0 +1,16 @@
+{
+    "name": "thebeardedbear/urssaf-tools-phpbench",
+    "description": "Benchmark runner (PHPBench), kept out of the package dependencies: run it with `make bench`.",
+    "license": "MIT",
+    "type": "project",
+    "require": {
+        "php": ">=8.2",
+        "phpbench/phpbench": "^1.7"
+    },
+    "config": {
+        "platform": {
+            "php": "8.2.0"
+        },
+        "sort-packages": true
+    }
+}
