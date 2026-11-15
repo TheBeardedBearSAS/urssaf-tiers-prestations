@@ -7,6 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-15
+
+### Upgrading
+
+- New table `urssaf_tps_outbox` (driver `doctrine`): generate and run the migration (`doctrine:migrations:diff`,
+  `doctrine:migrations:migrate`), even when the outbox is disabled, since the mapping is always loaded.
+  `urssaf:check` reports the missing table.
+- The domain events that have an integration event take the external reference after the tenant id (see Changed), and
+  `ServiceIds::PSR_CLOCK` / `PsrClockFactory` are gone (`ClockFactory`).
+
 ### Added
 
 - French translations of the violation codes (`urssaf_tiers_prestations.fr.yaml`), shipped next to the English ones;
@@ -45,8 +55,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `Standalone\UrssafTiersPrestations`, which returns the handlers. See [docs/standalone.md](docs/standalone.md).
 
 - Symfony Flex recipe (`recipe/`): registers the bundle, copies a commented configuration (simulated gateway in the
-  `test` environment) and adds the `URSSAF_*` variables to `.env`; `bin/build-flex-endpoint` builds the private Flex
-  endpoint (CI artifact `flex-endpoint`).
+  `test` environment) and adds the `URSSAF_*` variables to `.env`; `bin/build-flex-endpoint` builds a Flex
+  endpoint to try the recipe before publishing it in symfony/recipes-contrib.
 
 ### Changed
 
