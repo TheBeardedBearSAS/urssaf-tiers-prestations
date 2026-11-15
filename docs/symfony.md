@@ -5,11 +5,15 @@ Bundle class: `TheBeardedBear\UrssafTiersPrestations\Bridge\Symfony\UrssafTiersP
 
 ## Symfony Flex recipe
 
-The recipe lives in `recipe/thebeardedbear/urssaf-tiers-prestations/<version>/` (manifest and copied files);
-`bin/build-flex-endpoint <output-dir> <base-url>` turns it into a private Flex endpoint (`index.json` and one JSON file
-per recipe) to serve at `<base-url>`, which applications declare in `extra.symfony.endpoint` (see the README). A test
-boots the bundle with the copied configuration, so that the recipe follows the configuration tree. Add a new version
-directory when a release changes the recipe (Flex picks the highest version not above the installed package version).
+The recipe lives in `recipe/thebeardedbear/urssaf-tiers-prestations/<version>/` (manifest and copied files), in the
+layout of [symfony/recipes-contrib](https://github.com/symfony/recipes-contrib), where it is published: copy the version
+directory there in a pull request when a release changes it (Flex picks the highest recipe version not above the
+installed package version). A test boots the bundle with the copied configuration, so that the recipe follows the
+configuration tree.
+
+To try a recipe change before it is published, or to serve it from your own endpoint, `bin/build-flex-endpoint
+<output-dir> <base-url>` builds a Flex endpoint (`index.json` and one JSON file per recipe) to serve over HTTPS at
+`<base-url>` and declare in `extra.symfony.endpoint` of the application (`["<base-url>/index.json", "flex://defaults"]`).
 
 ## Configuration reference
 

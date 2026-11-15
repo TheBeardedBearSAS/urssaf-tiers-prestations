@@ -77,7 +77,7 @@ jobs:
           fi
 
   flex-endpoint:
-    # The Symfony Flex endpoint of the recipe (recipe/), as an artifact: publish its files at FLEX_ENDPOINT_URL.
+    # Builds the Flex endpoint of the recipe (recipe/) to check it; the recipe itself is published in symfony/recipes-contrib.
     name: flex endpoint
     runs-on: ubuntu-latest
     steps:
@@ -86,7 +86,7 @@ jobs:
         with:
           php-version: '8.4'
           coverage: none
-      - run: bin/build-flex-endpoint var/flex-endpoint "${{ vars.FLEX_ENDPOINT_URL || 'https://flex.invalid/urssaf' }}"
+      - run: bin/build-flex-endpoint var/flex-endpoint https://flex.invalid/urssaf
       - uses: actions/upload-artifact@v4
         with:
           name: flex-endpoint

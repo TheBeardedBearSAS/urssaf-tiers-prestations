@@ -54,34 +54,21 @@ The full description of the API (fields, rules, codes, statuses, official JSON e
 
 ## Installation
 
-The package is distributed from a private Git repository, its Symfony Flex recipe from a private Flex endpoint (the
-files built by `bin/build-flex-endpoint`, artifact `flex-endpoint` of the CI, served over HTTPS). Declare both in your
-`composer.json`:
-
-```json
-{
-    "repositories": [
-        {"type": "vcs", "url": "git@<your-git-host>:<group>/urssaf-tiers-prestations.git"}
-    ],
-    "extra": {
-        "symfony": {
-            "endpoint": ["https://<flex-endpoint-host>/urssaf/index.json", "flex://defaults"]
-        }
-    }
-}
-```
-
-then:
-
 ```bash
 composer require thebeardedbear/urssaf-tiers-prestations
 ```
 
-The recipe registers the bundle, copies a commented `config/packages/urssaf_tiers_prestations.yaml` (the simulated
-URSSAF platform in the `test` environment) and adds `URSSAF_ENV`, `URSSAF_CLIENT_ID` and `URSSAF_CLIENT_SECRET` to `.env`.
-Without the endpoint, do these steps by hand (Quick start B below). Then check the installation:
+With Symfony Flex, the recipe of the package (published in
+[symfony/recipes-contrib](https://github.com/symfony/recipes-contrib)) registers the bundle, copies a commented
+`config/packages/urssaf_tiers_prestations.yaml` (the simulated URSSAF platform in the `test` environment) and adds
+`URSSAF_ENV`, `URSSAF_CLIENT_ID` and `URSSAF_CLIENT_SECRET` to `.env`. Contrib recipes are applied once the application
+allows them (`composer config extra.symfony.allow-contrib true`, asked by Flex at the first contrib package); without
+Flex, do these steps by hand (Quick start B below).
+
+Then generate the tables of the package (it ships no migration) and check the installation:
 
 ```bash
+php bin/console doctrine:migrations:diff && php bin/console doctrine:migrations:migrate
 php bin/console urssaf:check
 ```
 
