@@ -33,7 +33,7 @@ jobs:
       matrix:
         gate: [cs, rector, phpstan, mago, deptrac, composer-checks]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: ./.github/actions/setup
         with:
           php-version: '8.2'
@@ -68,7 +68,7 @@ jobs:
     name: guard
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Forbidden word
         run: |
           if grep -rIil --exclude-dir=vendor --exclude-dir=var --exclude-dir=.git 'extra''bat' . ; then
@@ -81,13 +81,13 @@ jobs:
     name: flex endpoint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.4'
           coverage: none
       - run: bin/build-flex-endpoint var/flex-endpoint https://flex.invalid/urssaf
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: flex-endpoint
           path: var/flex-endpoint
@@ -107,7 +107,7 @@ jobs:
           - { php: '8.5', dependencies: lowest, experimental: true }
           - { php: '8.5', dependencies: highest, experimental: true }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: ./.github/actions/setup
         with:
           php-version: ${{ matrix.php }}
@@ -118,8 +118,11 @@ jobs:
   coverage:
     name: coverage
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Codecov upload through OIDC (no token)
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: ./.github/actions/setup
         with:
           php-version: '8.2'
@@ -129,7 +132,15 @@ jobs:
           vendor/bin/phpunit --testsuite=unit,functional --coverage-text --coverage-clover var/coverage/clover.xml
           --coverage-html var/coverage/html --coverage-xml var/coverage/coverage-xml --log-junit var/coverage/junit.xml
       - run: php bin/check-coverage var/coverage/clover.xml
-      - uses: actions/upload-artifact@v4
+      # Public report: https://app.codecov.io/gh/<owner>/<repo>. Public repositories only (OIDC, Codecov GitHub app).
+      - uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
+        if: github.event.repository.private == false
+        with:
+          use_oidc: true
+          files: var/coverage/clover.xml
+          disable_search: true
+          fail_ci_if_error: false
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: coverage
@@ -142,21 +153,81 @@ jobs:
     name: infection
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: ./.github/actions/setup
         with:
           php-version: '8.2'
           dependencies: locked
           coverage: pcov
-      - run: >-
-          vendor/bin/infection --min-msi=100 --min-covered-msi=100 --threads=max --show-mutations --no-progress
-          --test-framework-options="--testsuite=unit,functional"
-      - uses: actions/upload-artifact@v4
+      # The mutation report of main is published on the Stryker Dashboard (infection.json5, logs.stryker) when the
+      # repository secret STRYKER_DASHBOARD_API_KEY is set; without it, Infection skips the upload.
+      - run: |
+          if [ -z "$STRYKER_DASHBOARD_API_KEY" ]; then unset STRYKER_DASHBOARD_API_KEY; fi
+          vendor/bin/infection --min-msi=100 --min-covered-msi=100 --threads=max --show-mutations --no-progress \
+            --test-framework-options="--testsuite=unit,functional"
+        env:
+          STRYKER_DASHBOARD_API_KEY: ${{ secrets.STRYKER_DASHBOARD_API_KEY }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: infection
           path: var/infection/
           retention-days: 7
+
+  # SonarQube Cloud analysis (quality gate, reliability, security, maintainability), fed with the coverage and JUnit
+  # reports of the coverage job. Public repositories only, when the SONAR_TOKEN secret is set.
+  sonarcloud:
+    name: sonarcloud
+    needs: coverage
+    if: github.event.repository.private == false
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: coverage
+          path: var/coverage
+      - uses: SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4 # v8.5.0
+        if: env.SONAR_TOKEN != ''
+
+  # PHPBench (tools/phpbench, out of the package dependencies). On a pull request, the benchmarks of the branch also run
+  # against the base commit in the same job, and the job fails on a regression of more than 20 %.
+  benchmark:
+    name: benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+        with:
+          php-version: '8.4'
+          dependencies: locked
+      - run: composer install --no-progress --working-dir=tools/phpbench
+      - name: Baseline (base commit, benchmarks of the branch)
+        if: github.event_name == 'pull_request'
+        run: |
+          git worktree add var/base "${{ github.event.pull_request.base.sha }}"
+          rm -rf var/base/tests/Benchmark && cp -R tests/Benchmark var/base/tests/Benchmark && cp phpbench.json var/base/
+          composer install --no-progress --working-dir=var/base
+          if (cd var/base && ../../tools/phpbench/vendor/bin/phpbench run --tag=base --store); then
+            mkdir -p var/phpbench && cp -R var/base/var/phpbench/. var/phpbench/
+            echo "BASELINE=1" >> "$GITHUB_ENV"
+          else
+            echo "::warning::The benchmarks do not run on the base commit: no comparison."
+          fi
+      - name: Benchmarks
+        run: |
+          if [ "${BASELINE:-0}" = 1 ]; then
+            tools/phpbench/vendor/bin/phpbench run --report=urssaf --ref=base \
+              --assert="mode(variant.time.avg) <= mode(baseline.time.avg) +/- 20%"
+          else
+            tools/phpbench/vendor/bin/phpbench run --report=urssaf --store --tag=current
+          fi
 
   # Manual only: Actions > CI > Run workflow > "contract". Repository secrets URSSAF_SANDBOX_CLIENT_ID and
   # URSSAF_SANDBOX_CLIENT_SECRET are required; the other sandbox variables are optional repository variables.
@@ -166,7 +237,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: urssaf-sandbox
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: ./.github/actions/setup
         with:
           php-version: '8.2'

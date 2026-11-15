@@ -3,3 +3,6 @@ var/
 .phpunit.cache/
 .idea/
 .vscode/
+
+# Benchmark runner dependencies (tools/phpbench, installed by make bench)
+/tools/*/vendor/

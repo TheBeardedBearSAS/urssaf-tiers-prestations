@@ -1,0 +1,18 @@
+# Weekly updates of the pinned GitHub Actions (SHA + version comment) and of the Composer dependencies.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directories: ['/', '/.github/actions/setup']
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ['*']
+  - package-ecosystem: composer
+    directories: ['/', '/tools/phpbench']
+    schedule:
+      interval: weekly
+    versioning-strategy: increase-if-necessary
+    groups:
+      composer:
+        patterns: ['*']
