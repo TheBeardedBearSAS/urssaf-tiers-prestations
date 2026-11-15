@@ -76,6 +76,17 @@ jobs:
             exit 1
           fi
 
+  hadolint:
+    name: hadolint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Dockerfile lint (.hadolint.yaml)
+        run: >-
+          docker run --rm -v "$PWD":/repo:ro -w /repo
+          hadolint/hadolint:v2.15.1@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d
+          hadolint docker/php/Dockerfile
+
   flex-endpoint:
     # Builds the Flex endpoint of the recipe (recipe/) to check it; the recipe itself is published in symfony/recipes-contrib.
     name: flex endpoint

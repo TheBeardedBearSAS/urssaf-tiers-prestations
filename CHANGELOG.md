@@ -19,6 +19,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - CI: every GitHub Action is pinned to a commit SHA, kept up to date by Dependabot (`.github/dependabot.yml`, also
   for Composer).
+- Dockerfile linted by hadolint (`make hadolint`, part of `make ci`, CI job `hadolint`); the development image runs as
+  a non-root user by default.
 
 - README: maintainer (The Bearded Bear), the other URSSAF packages and professional support; composer
   `authors` now points to https://the-bearded-bear.com.

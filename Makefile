@@ -13,7 +13,7 @@ UNIT_FUNCTIONAL := --testsuite=$(SUITES)
 
 .DEFAULT_GOAL := help
 .PHONY: help build install update shell test test-unit test-functional test-contract coverage coverage-paths \
-	bench infection phpstan mago cs cs-fix rector rector-fix deptrac composer-checks guard ci
+	bench infection phpstan mago cs cs-fix rector rector-fix deptrac composer-checks hadolint guard ci
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "%-16s %s\n", $$1, $$2}'
@@ -87,9 +87,13 @@ composer-checks: ## composer validate/audit/normalize + dependency hygiene
 	$(PHP) vendor/bin/composer-require-checker check --config-file=composer-require-checker.json composer.json
 	$(PHP) vendor/bin/composer-unused --no-progress --configuration=composer-unused.php
 
+hadolint: ## Lint the Dockerfiles (hadolint, .hadolint.yaml)
+	docker run --rm -v "$(CURDIR)":/repo:ro -w /repo hadolint/hadolint:v2.15.1@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d \
+		hadolint docker/php/Dockerfile
+
 guard: ## Fail if the forbidden word is found in the repository
 	@if grep -rIil --exclude-dir=vendor --exclude-dir=var --exclude-dir=.git 'extra''bat' . ; then \
 		echo "Forbidden word found (see files above)"; exit 1; \
 	fi
 
-ci: cs rector phpstan mago deptrac composer-checks guard coverage infection ## Full quality gate
+ci: cs rector phpstan mago deptrac composer-checks hadolint guard coverage infection ## Full quality gate

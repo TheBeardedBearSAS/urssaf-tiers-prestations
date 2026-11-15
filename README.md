@@ -291,7 +291,8 @@ with the lowest and highest dependencies, PHP 8.5 allowed to fail). The contract
 
 Quality gates (all blocking): PHPUnit with 100 % coverage, Infection with 100 % MSI, PHPStan at level max, Mago
 (`make mago`), PHP-CS-Fixer (`make cs`, `make cs-fix`), Rector (`make rector`), Deptrac (`make deptrac`), composer
-checks (`make composer-checks`: validate, audit, normalize, require-checker, unused) and `make guard`.
+checks (`make composer-checks`: validate, audit, normalize, require-checker, unused), hadolint on the Dockerfile
+(`make hadolint`) and `make guard`.
 Use `PHP_VERSION=8.3 make ci` to run against another PHP version.
 
 Published proofs (public repository, `main`): the coverage report on Codecov, the full mutation report on the Stryker
