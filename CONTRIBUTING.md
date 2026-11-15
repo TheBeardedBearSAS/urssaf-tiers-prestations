@@ -46,6 +46,9 @@ comment explaining why, in the same pull request.
 ## Pull requests
 
 - One subject per pull request, branched from `main`.
+- **Tests are mandatory**: every new feature and every bug fix comes with automated tests (PHPUnit, in `tests/Unit`
+  or `tests/Functional`) in the same pull request. A bug fix includes a test that fails without the fix. The 100 %
+  coverage and 100 % MSI gates enforce it.
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`,
   `test:`, `chore:`...).
 - Add a line to the `[Unreleased]` section of [CHANGELOG.md](CHANGELOG.md) for any change that is visible to users.
