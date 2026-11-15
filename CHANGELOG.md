@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Signed releases (workflow `release.yml`): each GitHub release carries the distribution archive, its `SHA256SUMS`
+  and a SLSA build provenance attestation (`*.intoto.jsonl`, Sigstore); see *Verifying a release* in SECURITY.md.
+- CodeQL analysis of the GitHub Actions workflows (workflow `codeql.yml`) on every pull request and push to `main`.
 - Benchmarks (`tests/Benchmark`, `make bench`, PHPBench isolated in `tools/phpbench`): customer validation, wire
   encoding (registration, batch of 10 payment requests) and decoding (submission outcome, search); the CI job
   `benchmark` compares each pull request with its base commit and fails above a 20 % regression.
