@@ -57,7 +57,7 @@ final readonly class AsciiNameNormalizer
         $allowed = preg_replace("/[^A-Za-z '\\-]+/", '', $spaced) ?? '';
         $single = preg_replace('/ {2,}/', ' ', $allowed) ?? '';
 
-        return preg_replace('/^[^A-Za-z]+|[^A-Za-z]+$/', '', $single) ?? '';
+        return preg_replace('/(?:^[^A-Za-z]+)|(?:[^A-Za-z]+$)/', '', $single) ?? '';
     }
 
     private function transliterate(string $name): string
