@@ -321,7 +321,7 @@ The same architecture, quality gate and conventions, one package per URSSAF API:
 
 | API | Package | Status |
 |---|---|---|
-| Attestations Vérification Code Sécurité (certificate verification) | [`thebeardedbear/urssaf-attestations-verification-code-securite`](https://github.com/TheBeardedBearSAS/urssaf-attestations-verification-code-securite) | Implemented, on Packagist (no tagged release yet) |
+| Attestations Vérification Code Sécurité (certificate verification) | [`thebeardedbear/urssaf-attestations-verification-code-securite`](https://github.com/TheBeardedBearSAS/urssaf-attestations-verification-code-securite) | Released (Packagist) |
 | DPAE (pre-employment declaration) | `thebeardedbear/urssaf-dpae` | Coming soon |
 | Mobilité internationale (posting of workers abroad) | `thebeardedbear/urssaf-mobilite-internationale` | Coming soon |
 | Plateforme numérique (withholding of contributions by digital platforms) | `thebeardedbear/urssaf-plateforme-numerique` | Coming soon |
