@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-15
+
 ### Added
 
 - Signed releases (workflow `release.yml`): each GitHub release carries the distribution archive, its `SHA256SUMS`
@@ -27,6 +29,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - README: maintainer (The Bearded Bear), the other URSSAF packages and professional support; composer
   `authors` now points to https://the-bearded-bear.com.
+
+- `composer.json` `homepage` now points to the project page, shown by Packagist:
+  https://the-bearded-bear.com/open-source/urssaf-tiers-prestations. The README links to it and to the overview of
+  the URSSAF packages.
 
 ## [0.2.0] - 2026-11-15
 
