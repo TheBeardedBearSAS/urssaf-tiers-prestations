@@ -81,6 +81,8 @@ jobs:
             echo "Forbidden word found (see files above)"
             exit 1
           fi
+      - name: SPDX headers
+        run: sh bin/check-spdx
 
   hadolint:
     name: hadolint
