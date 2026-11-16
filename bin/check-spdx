@@ -1,0 +1,29 @@
+#!/bin/sh
+# This file is part of thebeardedbear/urssaf-tiers-prestations.
+#
+# Copyright (c) TheBeardedBear and the urssaf-tiers-prestations contributors
+#
+# SPDX-License-Identifier: MIT
+#
+# Fails when a source file that can hold comments lacks the "SPDX-License-Identifier: MIT" line.
+# PHP files are fixed by PHP CS Fixer (header_comment); this guard covers them too, plus XML, YAML, shell, Makefile and
+# Dockerfile files. Excluded: recipe/ (copied into host applications), vendor/, var/, JSON and lock files (no comments).
+# Usage: sh bin/check-spdx
+
+set -eu
+
+missing=0
+files=$(find src tests bin docker .github -type f \
+        \( -name '*.php' -o -name '*.xml' -o -name '*.yaml' -o -name '*.yml' -o -name '*.sh' -o -name 'Dockerfile' \
+           -o -path 'bin/*' \) \
+        -not -path '*/vendor/*' -not -path '*/var/*' | sort
+    printf '%s\n' Makefile docker-compose.yml rector.php composer-unused.php .php-cs-fixer.dist.php)
+
+for file in $files; do
+    if ! grep -q 'SPDX-License-Identifier: MIT' "$file"; then
+        echo "Missing SPDX-License-Identifier: $file"
+        missing=1
+    fi
+done
+
+exit "$missing"

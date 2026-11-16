@@ -38,7 +38,11 @@ A pull request is merged only if `make ci` passes:
 
 - code style (PHP CS Fixer), Rector, PHPStan at level max, Mago, Deptrac (architecture layers);
 - composer validate / audit / normalize and dependency hygiene;
-- tests with the coverage threshold, and mutation testing (Infection) at **100% MSI**.
+- tests with the coverage threshold, and mutation testing (Infection) at **100% MSI**;
+- licence headers: every source file carries the short header (`Copyright (c) TheBeardedBear and the
+  urssaf-tiers-prestations contributors` + `SPDX-License-Identifier: MIT`). PHP files get it from `make cs-fix`
+  (PHP CS Fixer `header_comment`); `make guard` fails when another source file (XML, YAML, shell, Makefile, Dockerfile)
+  lacks it. `recipe/`, `vendor/`, `var/` and comment-less files (JSON, lock files) are excluded.
 
 Thresholds are never lowered. If a rule really has to be relaxed, the exception goes in the tool configuration with a
 comment explaining why, in the same pull request.

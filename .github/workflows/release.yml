@@ -1,3 +1,9 @@
+# This file is part of thebeardedbear/urssaf-tiers-prestations.
+#
+# Copyright (c) TheBeardedBear and the urssaf-tiers-prestations contributors
+#
+# SPDX-License-Identifier: MIT
+
 # Signed release assets: the distribution archive (same content as the Composer dist, export-ignore applied), its
 # SHA256SUMS and a SLSA build provenance attestation (Sigstore bundle, `.intoto.jsonl`), attached to the GitHub release.
 # Verify with: gh attestation verify <archive>.zip -R <owner>/<repo>

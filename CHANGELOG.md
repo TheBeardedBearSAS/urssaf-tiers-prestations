@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Every source file now carries a copyright and `SPDX-License-Identifier: MIT` header, enforced by PHP CS Fixer
+  (`header_comment`) for PHP and by `make guard` (`bin/check-spdx`) for the other source files.
 - CI: the SonarQube Cloud analysis also requires the repository variable `SONARCLOUD=enabled`, set once the
   project is imported on SonarQube Cloud.
 
