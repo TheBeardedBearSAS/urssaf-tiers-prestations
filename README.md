@@ -356,8 +356,9 @@ Project page and integration offer: [the-bearded-bear.com/open-source/urssaf-tie
 
 ## Contributing and security
 
-Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). Report vulnerabilities privately as described in
-[SECURITY.md](SECURITY.md), never in a public issue.
+Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
+The project's governance is described in [GOVERNANCE.md](GOVERNANCE.md) and its direction in [ROADMAP.md](ROADMAP.md).
+Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md), never in a public issue.
 
 ## License
 
