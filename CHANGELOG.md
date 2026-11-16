@@ -10,7 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - CI: branch coverage is measured (Xdebug path coverage, `make coverage-branches`, Cobertura report) and enforced at
-  96 % minimum (measured 96.6 %), above the 80 % of the OpenSSF gold criterion.
+  96 % minimum (measured 96.6 %), above the 80 % of the OpenSSF gold criterion. The job
+  `coverage-branches` runs on `main`, nightly (the CI workflow now has a nightly schedule) and on demand.
 
 ### Changed
 

@@ -290,7 +290,7 @@ with the lowest and highest dependencies, PHP 8.5 allowed to fail). The contract
 `contract` checked) and reads the repository secrets `URSSAF_SANDBOX_CLIENT_ID` / `URSSAF_SANDBOX_CLIENT_SECRET` of the
 `urssaf-sandbox` environment.
 
-Quality gates (all blocking): PHPUnit with 100 % coverage and at least 96 % branch coverage (`make coverage-branches`, Xdebug path coverage; measured 96.6 %), Infection with 100 % MSI, PHPStan at level max, Mago
+Quality gates (all blocking): PHPUnit with 100 % coverage and at least 96 % branch coverage (`make coverage-branches`, Xdebug path coverage; measured 96.6 %; slow, so the CI runs it on `main`, nightly and on demand, not on pull requests), Infection with 100 % MSI, PHPStan at level max, Mago
 (`make mago`), PHP-CS-Fixer (`make cs`, `make cs-fix`), Rector (`make rector`), Deptrac (`make deptrac`), composer
 checks (`make composer-checks`: validate, audit, normalize, require-checker, unused), hadolint on the Dockerfile
 (`make hadolint`) and `make guard`.
