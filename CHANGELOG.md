@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Project governance: `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `GOVERNANCE.md` (decision model, roles and
+  responsibilities), `ROADMAP.md` (next twelve months), and the code review requirements and first-contribution
+  tasks in `CONTRIBUTING.md`.
+- Developer Certificate of Origin: every commit is signed off (`git commit -s`), checked on each pull request by the
+  CI job `dco` (`bin/check-dco`).
+
 ### Changed
 
 - CI: the SonarQube Cloud analysis also requires the repository variable `SONARCLOUD=enabled`, set once the
