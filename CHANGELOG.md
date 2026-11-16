@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Security assurance case (threat model, trust boundaries, secure design principles, countered weaknesses) and the
+  November 2026 security review, in `docs/security/`, linked from `SECURITY.md` and the README.
 - Project governance: `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `GOVERNANCE.md` (decision model, roles and
   responsibilities), `ROADMAP.md` (next twelve months), and the code review requirements and first-contribution
   tasks in `CONTRIBUTING.md`.
