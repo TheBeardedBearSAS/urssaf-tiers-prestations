@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# This file is part of thebeardedbear/urssaf-tiers-prestations.
+#
+# Copyright (c) TheBeardedBear and the urssaf-tiers-prestations contributors
+#
+# SPDX-License-Identifier: MIT
+#
 # Developer Certificate of Origin (https://developercert.org): every non-merge commit of the range must carry a
 # "Signed-off-by:" trailer with its author's e-mail (`git commit -s`). Bots (author name ending with "[bot]", e.g.
 # Dependabot) sign off with their own address, so any sign-off is accepted for them.

@@ -1,3 +1,9 @@
+# This file is part of thebeardedbear/urssaf-tiers-prestations.
+#
+# Copyright (c) TheBeardedBear and the urssaf-tiers-prestations contributors
+#
+# SPDX-License-Identifier: MIT
+
 name: Setup PHP and dependencies
 description: Installs PHP with the extensions of docker/php/Dockerfile and the Composer dependencies.
 

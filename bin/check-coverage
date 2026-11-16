@@ -3,10 +3,12 @@
 
 declare(strict_types=1);
 
-/**
- * Fails unless lines, methods and classes coverage are all 100% in a PHPUnit clover report.
+/*
+ * This file is part of thebeardedbear/urssaf-tiers-prestations.
  *
- * Usage: bin/check-coverage [path/to/clover.xml]
+ * Copyright (c) TheBeardedBear and the urssaf-tiers-prestations contributors
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 $cloverPath = $argv[1] ?? __DIR__ . '/../var/coverage/clover.xml';

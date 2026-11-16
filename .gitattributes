@@ -10,6 +10,7 @@
 /Makefile export-ignore
 /bin/check-coverage export-ignore
 /bin/check-dco export-ignore
+/bin/check-spdx export-ignore
 /composer-require-checker.json export-ignore
 /composer-unused.php export-ignore
 /deptrac.yaml export-ignore

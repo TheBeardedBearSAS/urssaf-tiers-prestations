@@ -1,3 +1,9 @@
+# This file is part of thebeardedbear/urssaf-tiers-prestations.
+#
+# Copyright (c) TheBeardedBear and the urssaf-tiers-prestations contributors
+#
+# SPDX-License-Identifier: MIT
+
 # CodeQL static analysis of the GitHub Actions workflows (injection, excessive permissions, untrusted checkout...).
 # CodeQL does not analyse PHP: the package code is covered by PHPStan, Mago and SonarQube Cloud (ci.yml).
 name: CodeQL

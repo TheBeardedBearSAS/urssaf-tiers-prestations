@@ -3,11 +3,12 @@
 
 declare(strict_types=1);
 
-/**
- * Builds a private Symfony Flex endpoint from the recipes of the recipe/ directory: an index.json and one
- * "<vendor>.<package>.<version>.json" file per recipe, to be served over HTTPS at <base-url>.
+/*
+ * This file is part of thebeardedbear/urssaf-tiers-prestations.
  *
- * Usage: bin/build-flex-endpoint <output-dir> <base-url>
+ * Copyright (c) TheBeardedBear and the urssaf-tiers-prestations contributors
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 if ($argc !== 3) {
