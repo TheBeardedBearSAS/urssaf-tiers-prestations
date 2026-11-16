@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Security assurance case (threat model, trust boundaries, secure design principles, countered weaknesses) and the
+  November 2026 security review, in `docs/security/`, linked from `SECURITY.md` and the README.
+
 ### Changed
 
 - CI: the SonarQube Cloud analysis also requires the repository variable `SONARCLOUD=enabled`, set once the

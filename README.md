@@ -270,6 +270,8 @@ Violation codes are translated by the Symfony bridge (domain `urssaf_tiers_prest
 - The access token lives only in the token store (cache) with a safety margin.
 - Logs never contain tokens nor request/response bodies; exception messages never contain secrets nor the rejected raw
   value.
+- Security design and review: [assurance case](docs/security/assurance-case.md) (threat model, trust boundaries,
+  design principles, countered weaknesses) and [security review](docs/security/security-review-2026-11.md).
 
 ## Testing the package
 
