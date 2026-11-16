@@ -14,7 +14,7 @@ $finder = Finder::create()
     ->notPath('#^(var|vendor)/#')
     ->ignoreDotFiles(false)
     ->name('*.php')
-    ->append([__DIR__ . '/bin/check-coverage']);
+    ->append([__DIR__ . '/bin/check-coverage', __DIR__ . '/bin/check-branch-coverage']);
 
 return (new Config())
     ->setParallelConfig(ParallelConfigFactory::detect())

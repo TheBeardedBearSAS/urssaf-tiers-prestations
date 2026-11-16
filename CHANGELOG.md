@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- CI: branch coverage is measured (Xdebug path coverage, `make coverage-branches`, Cobertura report) and enforced at
+  96 % minimum (measured 96.6 %), above the 80 % of the OpenSSF gold criterion.
+
 ### Changed
 
 - CI: the SonarQube Cloud analysis also requires the repository variable `SONARCLOUD=enabled`, set once the
