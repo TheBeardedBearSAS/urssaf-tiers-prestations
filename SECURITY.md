@@ -24,6 +24,13 @@ Never include real credentials (`client_id` / `client_secret`), access tokens, o
 You will get an acknowledgement within 5 working days. The fix is then prepared privately and released, and the
 advisory is published with credit to the reporter unless you ask otherwise.
 
+## Security design and review
+
+- [Assurance case](docs/security/assurance-case.md): security requirements, threat model, trust boundaries, secure
+  design principles and the countermeasures against common implementation weaknesses.
+- [Security review, November 2026](docs/security/security-review-2026-11.md): design and code review against that case,
+  with its findings.
+
 ## Verifying a release
 
 Every GitHub release carries the distribution archive (same content as the Composer dist), its `SHA256SUMS` and a

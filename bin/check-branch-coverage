@@ -3,10 +3,12 @@
 
 declare(strict_types=1);
 
-/**
- * Fails when branch coverage in a PHPUnit Cobertura report (Xdebug, --path-coverage) is below a threshold.
+/*
+ * This file is part of thebeardedbear/urssaf-tiers-prestations.
  *
- * Usage: bin/check-branch-coverage [path/to/cobertura.xml] [minimum percent, default 96]
+ * Copyright (c) TheBeardedBear and the urssaf-tiers-prestations contributors
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 $coberturaPath = $argv[1] ?? __DIR__ . '/../var/coverage/cobertura.xml';

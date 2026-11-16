@@ -12,9 +12,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - CI: branch coverage is measured (Xdebug path coverage, `make coverage-branches`, Cobertura report) and enforced at
   96 % minimum (measured 96.6 %), above the 80 % of the OpenSSF gold criterion. The job
   `coverage-branches` runs on `main`, nightly (the CI workflow now has a nightly schedule) and on demand.
+- Security assurance case (threat model, trust boundaries, secure design principles, countered weaknesses) and the
+  November 2026 security review, in `docs/security/`, linked from `SECURITY.md` and the README.
+- Project governance: `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `GOVERNANCE.md` (decision model, roles and
+  responsibilities), `ROADMAP.md` (next twelve months), and the code review requirements and first-contribution
+  tasks in `CONTRIBUTING.md`.
+- Developer Certificate of Origin: every commit is signed off (`git commit -s`), checked on each pull request by the
+  CI job `dco` (`bin/check-dco`).
 
 ### Changed
 
+- Every source file now carries a copyright and `SPDX-License-Identifier: MIT` header, enforced by PHP CS Fixer
+  (`header_comment`) for PHP and by `make guard` (`bin/check-spdx`) for the other source files.
 - CI: the SonarQube Cloud analysis also requires the repository variable `SONARCLOUD=enabled`, set once the
   project is imported on SonarQube Cloud.
 

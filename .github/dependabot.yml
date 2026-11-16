@@ -1,3 +1,9 @@
+# This file is part of thebeardedbear/urssaf-tiers-prestations.
+#
+# Copyright (c) TheBeardedBear and the urssaf-tiers-prestations contributors
+#
+# SPDX-License-Identifier: MIT
+
 # Weekly updates of the pinned GitHub Actions (SHA + version comment) and of the Composer dependencies.
 version: 2
 updates:

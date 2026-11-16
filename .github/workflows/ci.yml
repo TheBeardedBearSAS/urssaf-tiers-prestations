@@ -1,3 +1,9 @@
+# This file is part of thebeardedbear/urssaf-tiers-prestations.
+#
+# Copyright (c) TheBeardedBear and the urssaf-tiers-prestations contributors
+#
+# SPDX-License-Identifier: MIT
+
 name: CI
 
 on:
@@ -77,6 +83,24 @@ jobs:
             echo "Forbidden word found (see files above)"
             exit 1
           fi
+      - name: SPDX headers
+        run: sh bin/check-spdx
+
+  # Developer Certificate of Origin: every commit of a pull request is signed off (`git commit -s`), see CONTRIBUTING.md.
+  dco:
+    name: dco
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Signed-off-by on every commit
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bin/check-dco "${BASE_SHA}..${HEAD_SHA}"
 
   hadolint:
     name: hadolint

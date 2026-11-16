@@ -1,3 +1,9 @@
+# This file is part of thebeardedbear/urssaf-tiers-prestations.
+#
+# Copyright (c) TheBeardedBear and the urssaf-tiers-prestations contributors
+#
+# SPDX-License-Identifier: MIT
+
 # Messages of the violation codes of the package ("<subject>.<reason>"), domain "urssaf_tiers_prestations".
 # Every shipped locale (urssaf_tiers_prestations.fr.yaml...) has the same keys in the same order; override keys in the
 # translations/ directory of the application.
