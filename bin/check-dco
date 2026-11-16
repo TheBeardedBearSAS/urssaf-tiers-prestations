@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# This file is part of thebeardedbear/urssaf-tiers-prestations.
+#
+# Copyright (c) TheBeardedBear and the urssaf-tiers-prestations contributors
+#
+# SPDX-License-Identifier: MIT
+#
+# Developer Certificate of Origin (https://developercert.org): every non-merge commit of the range must carry a
+# "Signed-off-by:" trailer with its author's e-mail (`git commit -s`). Bots (author name ending with "[bot]", e.g.
+# Dependabot) sign off with their own address, so any sign-off is accepted for them.
+# Usage: bin/check-dco <base>..<head>
+set -euo pipefail
+
+range="${1:?usage: bin/check-dco <base>..<head>}"
+status=0
+# Listed first so that an invalid range fails the script (a process substitution would hide the error).
+commits=$(git rev-list --no-merges "$range")
+
+while read -r sha; do
+    [[ -z "$sha" ]] && continue
+    name=$(git show -s --format='%an' "$sha")
+    email=$(git show -s --format='%ae' "$sha")
+    signoffs=$(git show -s --format='%(trailers:key=Signed-off-by,valueonly)' "$sha")
+
+    if [[ "$name" == *'[bot]' ]]; then
+        [[ -n "$signoffs" ]] && continue
+    elif grep -qiF "<${email}>" <<< "$signoffs"; then
+        continue
+    fi
+
+    echo "::error::commit ${sha:0:12} by ${name} <${email}> has no matching 'Signed-off-by' trailer (use git commit -s)"
+    status=1
+done <<< "$commits"
+
+[[ $status -eq 0 ]] && echo "DCO: every commit of ${range} is signed off."
+exit $status
