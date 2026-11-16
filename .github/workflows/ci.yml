@@ -11,6 +11,8 @@ on:
     branches: [main]
     tags: ['v*']
   pull_request:
+  schedule:
+    - cron: '17 3 * * *' # nightly: branch coverage (see the coverage-branches job)
   workflow_dispatch:
     inputs:
       contract:
@@ -180,6 +182,33 @@ jobs:
         with:
           name: coverage
           path: var/coverage/
+          retention-days: 7
+
+  # Branch coverage (Xdebug path coverage, slow): at least 96 % of the branches of src, unit + functional suites. Same as
+  # `make coverage-branches`; kept apart from the coverage job, which stays on pcov for the Codecov / SonarQube reports.
+  # Xdebug path coverage takes about 40 minutes: it runs on main, nightly and on demand, not on pull requests.
+  coverage-branches:
+    name: coverage-branches
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+        with:
+          php-version: '8.2'
+          dependencies: locked
+          coverage: xdebug
+      - run: >-
+          vendor/bin/phpunit --testsuite=unit,functional --path-coverage --coverage-text
+          --coverage-cobertura var/coverage/cobertura.xml
+        env:
+          XDEBUG_MODE: coverage
+      - run: php bin/check-branch-coverage var/coverage/cobertura.xml 96
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: coverage-branches
+          path: var/coverage/cobertura.xml
           retention-days: 7
 
   # Same as `make infection`: Infection runs its own initial test pass (never --skip-initial-tests, which yields a false

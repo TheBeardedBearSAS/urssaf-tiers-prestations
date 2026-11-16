@@ -24,6 +24,7 @@ $finder = Finder::create()
     ->name('*.php')
     ->append([
         __DIR__ . '/bin/check-coverage',
+        __DIR__ . '/bin/check-branch-coverage',
         __DIR__ . '/bin/build-flex-endpoint',
         __DIR__ . '/.php-cs-fixer.dist.php',
         __DIR__ . '/composer-unused.php',

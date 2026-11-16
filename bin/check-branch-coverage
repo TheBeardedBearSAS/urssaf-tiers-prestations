@@ -1,0 +1,41 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of thebeardedbear/urssaf-tiers-prestations.
+ *
+ * Copyright (c) TheBeardedBear and the urssaf-tiers-prestations contributors
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+$coberturaPath = $argv[1] ?? __DIR__ . '/../var/coverage/cobertura.xml';
+$minimum = (float) ($argv[2] ?? 96);
+
+if (!is_file($coberturaPath)) {
+    fwrite(STDERR, sprintf("Cobertura report not found: %s\n", $coberturaPath));
+    exit(2);
+}
+
+$previous = libxml_use_internal_errors(true);
+$xml = simplexml_load_file($coberturaPath);
+libxml_use_internal_errors($previous);
+
+if (false === $xml || !isset($xml['branches-valid'], $xml['branches-covered'])) {
+    fwrite(STDERR, sprintf("Not a Cobertura report with branch data: %s\n", $coberturaPath));
+    exit(2);
+}
+
+$total = (int) $xml['branches-valid'];
+$covered = (int) $xml['branches-covered'];
+$percent = 0 === $total ? 100.0 : $covered / $total * 100;
+$ok = $percent >= $minimum;
+
+fwrite(
+    $ok ? STDOUT : STDERR,
+    sprintf("branches %6.2f%% (%d/%d) minimum %.2f%% %s\n", $percent, $covered, $total, $minimum, $ok ? 'OK' : 'FAIL'),
+);
+
+exit($ok ? 0 : 1);

@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- CI: branch coverage is measured (Xdebug path coverage, `make coverage-branches`, Cobertura report) and enforced at
+  96 % minimum (measured 96.6 %), above the 80 % of the OpenSSF gold criterion. The job
+  `coverage-branches` runs on `main`, nightly (the CI workflow now has a nightly schedule) and on demand.
 - Security assurance case (threat model, trust boundaries, secure design principles, countered weaknesses) and the
   November 2026 security review, in `docs/security/`, linked from `SECURITY.md` and the README.
 - Project governance: `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `GOVERNANCE.md` (decision model, roles and

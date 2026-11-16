@@ -281,6 +281,7 @@ Everything runs in Docker, no local PHP/Composer is needed:
 make install      # build the image and install dependencies
 make test         # unit + functional tests
 make coverage     # PHPUnit coverage, 100 % lines/methods/classes enforced
+make coverage-branches # branch coverage (Xdebug, slow), at least 96 % enforced
 make infection    # mutation testing, 100 % MSI
 make bench        # benchmarks (PHPBench): validation, wire encoding and decoding
 make ci           # the full quality gate
@@ -291,7 +292,7 @@ with the lowest and highest dependencies, PHP 8.5 allowed to fail). The contract
 `contract` checked) and reads the repository secrets `URSSAF_SANDBOX_CLIENT_ID` / `URSSAF_SANDBOX_CLIENT_SECRET` of the
 `urssaf-sandbox` environment.
 
-Quality gates (all blocking): PHPUnit with 100 % coverage, Infection with 100 % MSI, PHPStan at level max, Mago
+Quality gates (all blocking): PHPUnit with 100 % coverage and at least 96 % branch coverage (`make coverage-branches`, Xdebug path coverage; measured 96.6 %; slow, so the CI runs it on `main`, nightly and on demand, not on pull requests), Infection with 100 % MSI, PHPStan at level max, Mago
 (`make mago`), PHP-CS-Fixer (`make cs`, `make cs-fix`), Rector (`make rector`), Deptrac (`make deptrac`), composer
 checks (`make composer-checks`: validate, audit, normalize, require-checker, unused), hadolint on the Dockerfile
 (`make hadolint`) and `make guard`.

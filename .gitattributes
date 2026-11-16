@@ -9,6 +9,7 @@
 /.php-cs-fixer.dist.php export-ignore
 /Makefile export-ignore
 /bin/check-coverage export-ignore
+/bin/check-branch-coverage export-ignore
 /bin/check-dco export-ignore
 /bin/check-spdx export-ignore
 /composer-require-checker.json export-ignore

@@ -18,7 +18,7 @@ SUITES := $(shell for s in Unit Functional; do [ -d tests/$$s ] && echo $$s; don
 UNIT_FUNCTIONAL := --testsuite=$(SUITES)
 
 .DEFAULT_GOAL := help
-.PHONY: help build install update shell test test-unit test-functional test-contract coverage coverage-paths \
+.PHONY: help build install update shell test test-unit test-functional test-contract coverage coverage-paths coverage-branches \
 	bench infection phpstan mago cs cs-fix rector rector-fix deptrac composer-checks hadolint guard ci
 
 help: ## List targets
@@ -55,6 +55,10 @@ coverage: ## Coverage (pcov): text + clover + html in var/coverage, enforce 100%
 
 coverage-paths: ## Path coverage report (Xdebug)
 	$(PHP_XDEBUG) php -d pcov.enabled=0 vendor/bin/phpunit $(UNIT_FUNCTIONAL) --path-coverage --coverage-html var/coverage/paths
+
+coverage-branches: ## Branch coverage (Xdebug, slow): Cobertura in var/coverage, enforce >= 96 % branches
+	$(PHP_XDEBUG) php -d pcov.enabled=0 vendor/bin/phpunit $(UNIT_FUNCTIONAL) --path-coverage --coverage-text --coverage-cobertura var/coverage/cobertura.xml
+	$(PHP) php bin/check-branch-coverage var/coverage/cobertura.xml 96
 
 bench: ## Benchmarks (PHPBench in tools/phpbench, out of the package dependencies); e.g. make bench ARGS="--tag=main"
 	$(PHP) composer install --no-progress --working-dir=tools/phpbench
