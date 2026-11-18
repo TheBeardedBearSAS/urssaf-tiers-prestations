@@ -234,6 +234,8 @@ jobs:
       # Same check as `make infection`: a mutant skipped on the time limit was never run (infection.json5).
       - run: |
           grep -q '^Skipped: 0$' var/infection/summary.log || { echo 'Infection skipped mutants'; exit 1; }
+          grep -q '^Timed Out: 0$' var/infection/summary.log || { echo 'Infection timed-out mutants'; exit 1; }
+          grep -q '^Syntax Errors: 0$' var/infection/summary.log || { echo 'Infection mutants with a syntax error'; exit 1; }
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
