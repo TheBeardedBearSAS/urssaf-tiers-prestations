@@ -67,6 +67,7 @@ bench: ## Benchmarks (PHPBench in tools/phpbench, out of the package dependencie
 infection: ## Mutation testing (100% MSI); runs its own initial test pass (never --skip-initial-tests: false positives)
 	$(PHP) vendor/bin/infection --min-msi=100 --min-covered-msi=100 --threads=max --show-mutations --no-progress \
 		--test-framework-options="$(UNIT_FUNCTIONAL)"
+	@grep -q '^Skipped: 0$$' var/infection/summary.log || { echo 'Infection skipped mutants (time limit, see infection.json5)'; exit 1; }
 
 phpstan: ## PHPStan level max
 	$(PHP) vendor/bin/phpstan analyse --memory-limit=-1 --no-progress

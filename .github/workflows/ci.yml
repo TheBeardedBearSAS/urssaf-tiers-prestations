@@ -231,6 +231,9 @@ jobs:
             --test-framework-options="--testsuite=unit,functional"
         env:
           STRYKER_DASHBOARD_API_KEY: ${{ secrets.STRYKER_DASHBOARD_API_KEY }}
+      # Same check as `make infection`: a mutant skipped on the time limit was never run (infection.json5).
+      - run: |
+          grep -q '^Skipped: 0$' var/infection/summary.log || { echo 'Infection skipped mutants'; exit 1; }
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:

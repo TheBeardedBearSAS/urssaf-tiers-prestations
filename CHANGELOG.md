@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Infection: `timeout` raised from 30 s to 180 s, and `make infection` and the CI job fail when a mutant is skipped (Infection never runs a mutant whose covering tests exceed the limit, yet reports MSI 100 %).
 - Every source file now carries a copyright and `SPDX-License-Identifier: MIT` header, enforced by PHP CS Fixer
   (`header_comment`) for PHP and by `make guard` (`bin/check-spdx`) for the other source files.
 - CI: the SonarQube Cloud analysis also requires the repository variable `SONARCLOUD=enabled`, set once the
