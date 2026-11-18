@@ -20,7 +20,11 @@
     "mutators": {
         "@default": true
     },
-    "timeout": 30,
+    // Infection *skips* (never runs) a mutant whose covering tests take longer than
+    // this limit in total, and still reports MSI 100 %. Widely used value objects are covered by the functional suites,
+    // so 30 s left mutants untested on slower machines (139 in the auto-entrepreneur package). A higher limit makes the gate stricter, not weaker;
+    // `make infection` and the CI job also fail when any mutant is skipped.
+    "timeout": 180,
     "minMsi": 100,
     "minCoveredMsi": 100
 }
