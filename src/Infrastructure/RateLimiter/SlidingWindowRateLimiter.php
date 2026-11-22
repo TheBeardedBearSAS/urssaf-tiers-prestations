@@ -39,13 +39,14 @@ final class SlidingWindowRateLimiter implements RateLimiter
         $recent = array_filter(
             $this->calls[$tenantId->value()][$operation->value] ?? [],
             static fn(int $instant): bool => $instant > $windowStart,
+            \ARRAY_FILTER_USE_KEY,
         );
 
-        if (\count($recent) >= $operation->quotaPerMinute()) {
-            throw RateLimitExceeded::forOperation($operation, min($now, ...$recent) + self::WINDOW_SECONDS - $now);
+        if (array_sum($recent) >= $operation->quotaPerMinute()) {
+            throw RateLimitExceeded::forOperation($operation, min($now, ...array_keys($recent)) + self::WINDOW_SECONDS - $now);
         }
 
-        $recent[] = $now;
+        $recent[$now] = ($recent[$now] ?? 0) + 1;
         $this->calls[$tenantId->value()][$operation->value] = $recent;
     }
 }
