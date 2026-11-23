@@ -46,9 +46,12 @@ runs:
       shell: bash
       run: |
         mkdir -p var
+        # PHP 8.6: some development tools (composer-require-checker) do not allow it yet; the SDK itself requires php >=8.2.
+        IGNORE_PHP=""
+        if [ "${{ inputs.php-version }}" = "8.6" ]; then IGNORE_PHP="--ignore-platform-req=php"; fi
         case "${{ inputs.dependencies }}" in
-          locked)  composer install --no-progress ;;
-          lowest)  composer update --prefer-lowest --prefer-stable --no-progress ;;
-          highest) composer update --no-progress ;;
+          locked)  composer install --no-progress $IGNORE_PHP ;;
+          lowest)  composer update --prefer-lowest --prefer-stable --no-progress $IGNORE_PHP ;;
+          highest) composer update --no-progress $IGNORE_PHP ;;
           *) echo "Unknown dependencies mode: ${{ inputs.dependencies }}"; exit 1 ;;
         esac
