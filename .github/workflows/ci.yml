@@ -132,7 +132,7 @@ jobs:
   tests:
     name: tests (PHP ${{ matrix.php }}, ${{ matrix.dependencies }})
     runs-on: ubuntu-latest
-    # PHP 8.5 is not a supported runtime yet: its jobs may fail without failing the workflow.
+    # PHP 8.5 and 8.6 are not supported runtimes yet: their jobs may fail without failing the workflow.
     continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
@@ -143,6 +143,8 @@ jobs:
         include:
           - { php: '8.5', dependencies: lowest, experimental: true }
           - { php: '8.5', dependencies: highest, experimental: true }
+          - { php: '8.6', dependencies: lowest, experimental: true }
+          - { php: '8.6', dependencies: highest, experimental: true }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup

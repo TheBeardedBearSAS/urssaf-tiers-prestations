@@ -9,14 +9,15 @@ FROM php:${PHP_VERSION}-cli
 
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
-# The Debian release of the base image follows PHP_VERSION (8.2 to 8.5), so apt package versions cannot be pinned
+# The Debian release of the base image follows PHP_VERSION (8.2 to 8.6), so apt package versions cannot be pinned
 # without breaking the other bases; the security updates of the release are taken at build time instead.
 # hadolint ignore=DL3008
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git unzip libicu-dev libzip-dev libsqlite3-dev \
+    && apt-get install -y --no-install-recommends git unzip libicu-dev libonig-dev libzip-dev libsqlite3-dev \
     && docker-php-ext-install -j"$(nproc)" intl pdo_sqlite zip \
-    && pecl install pcov xdebug \
-    && docker-php-ext-enable pcov \
+    && { php -r 'exit(extension_loaded("mbstring") ? 0 : 1);' || docker-php-ext-install -j"$(nproc)" mbstring; } \
+    && if command -v pecl > /dev/null; then pecl install pcov xdebug && docker-php-ext-enable pcov; \
+       else echo "No pecl in this base image (PHP 8.6): no coverage driver, run the tests without coverage"; fi \
     && rm -rf /var/lib/apt/lists/* /tmp/pear
 
 # Xdebug is installed but only loaded when XDEBUG_MODE is set (see entrypoint / `make coverage-paths`).
