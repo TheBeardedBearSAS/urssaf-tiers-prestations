@@ -11,7 +11,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - CI: PHP 8.6 joins the test matrix as an experimental (non-blocking) job, without coverage: no coverage driver supports
   8.6 yet (Xdebug 3.5.3 requires PHP < 8.6, pcov does not build). The development image installs `mbstring` when the
-  base image lacks it and skips the pecl extensions when pecl is absent (PHP 8.6 base image).
+  base image lacks it and skips the pecl extensions when pecl is absent (PHP 8.6 base image). The 8.6 job with the
+  lowest dependencies is expected to fail: PHP 8.6 deprecates `spl_object_hash()`, which the lowest allowed versions of
+  `doctrine/event-manager`, `doctrine/persistence` and `symfony/doctrine-bridge` still call (the SDK itself does not).
 - CI: branch coverage is measured (Xdebug path coverage, `make coverage-branches`, Cobertura report) and enforced at
   96 % minimum (measured 96.6 %), above the 80 % of the OpenSSF gold criterion. The job
   `coverage-branches` runs on `main`, nightly (the CI workflow now has a nightly schedule) and on demand.
